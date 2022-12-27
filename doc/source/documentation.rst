@@ -3,5 +3,5 @@ Documentation
 
 .. toctree::
 
-   wnflows
+   wnnet
 

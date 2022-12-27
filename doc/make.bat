@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=source
 set BUILDDIR=build
-set SPHINXPROJ=wnflows
+set SPHINXPROJ=wnnet
 
 if "%1" == "" goto help
 

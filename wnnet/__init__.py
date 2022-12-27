@@ -1,5 +1,5 @@
 """
-A package of python routines to compute and graph flows from  webnucleo files.
+A package of python routines to handle webnucleo networks.
 """
 
-from wnflows.base import *
+from wnnet.base import *

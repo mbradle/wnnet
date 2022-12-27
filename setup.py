@@ -19,7 +19,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 about = {}
-with open(path.join(here, "wnflows", "__about__.py")) as f:
+with open(path.join(here, "wnnet", "__about__.py")) as f:
     exec(f.read(), about)
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
@@ -41,7 +41,7 @@ setup(
     # This field corresponds to the "Description-Content-Type" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
     long_description_content_type="text/x-rst",  # Optional (see note above)
-    url="https://github.com/mbradle/wnflows",  # Optional
+    url="https://github.com/mbradle/wnnet",  # Optional
     author="Clemson University",  # Optional
     author_email="mbradle@g.clemson.edu",  # Optional
     license="GPLv3+",
@@ -88,7 +88,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["wnutils"],  # Optional
+    install_requires=["wnutils", "astropy"],  # Optional
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
     # syntax, for example:
@@ -132,9 +132,9 @@ setup(
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
-        "Bug Reports": "https://github.com/mbradle/wnflows/issues",
+        "Bug Reports": "https://github.com/mbradle/wnnet/issues",
         # 'Funding': 'https://donate.pypi.org',
         # 'Say Thanks!': 'http://saythanks.io/to/example',
-        "Source": "https://github.com/mbradle/wnflows/",
+        "Source": "https://github.com/mbradle/wnnet/",
     },
 )

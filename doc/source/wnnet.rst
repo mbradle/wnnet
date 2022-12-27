@@ -1,18 +1,31 @@
-wnflows package
-===============
+wnnet package
+=============
 
-.. automodule:: wnflows
+.. automodule:: wnnet
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
-----------
+wnnet.base module
+-----------------
 
-wnflows.flows module
---------------------
+.. automodule:: wnnet.base
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. automodule:: wnflows.flows
+wnnet.flows module
+------------------
+
+.. automodule:: wnnet.flows
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+wnnet.net module
+----------------
+
+.. automodule:: wnnet.net
    :members:
    :undoc-members:
    :show-inheritance:

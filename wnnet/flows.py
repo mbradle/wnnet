@@ -1,5 +1,5 @@
 import wnutils.xml as wx
-import wnflows.base as fb
+import wnnet.base as fb
 import numpy as np
 
 
@@ -11,7 +11,28 @@ class Flows(fb.Base):
         self.nuclides = xml.get_nuclide_data()
         self.reactions = xml.get_reaction_data()
 
-    def compute_flows(self, zones, induced_nuc_xpath="", induced_reac_xpath=""):
+    def compute_flows_for_zones(self, zones, induced_nuc_xpath="", induced_reac_xpath=""):
+        """A class to compute flows for a set of zones.
+
+        Args:
+            ``zones`` (:obj:`dict`): A dictionary of `wnutils <https://wnutils.readthedocs.io>`_ *zone data*.
+
+            ``induced_nuc_xpath`` (:obj:`str`, optional): XPath expression
+            to select nuclides for flow computations.  Defaults to all
+            species.
+
+            ``induced_reac_xpath`` (:obj:`str`, optional): XPath expression
+            to select reactions for flow computations.  Defaults to all
+            reactions.
+
+        Returns:
+            :obj:`dict`: A dictionary of flows for each zone.  The data for
+            each zone are themselvs a :obj:`dict` of reactions with each
+            item in the dictionary a tuple giving the forward and
+            reverse flow.
+
+        """
+
         subset_nuclides = {}
         subset_reactions = {}
         if induced_nuc_xpath is None:

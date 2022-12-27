@@ -1,5 +1,6 @@
 import wnutils.xml as wx
 import numpy as np
+from astropy.constants import c, m_e
 
 
 class Base:
@@ -18,14 +19,19 @@ class Base:
             else:
                 result -= nuclides[sp]["mass excess"]
 
-        return result
+        if (
+            "positron" in reaction.nuclide_products
+            and "neutrino_e" in reaction.nuclide_products
+        ):
+            E = m_e * c**2
+            result -= 2.0 * E.to("MeV").value
 
-    def compute_Q_values(self, nuclides, reactions):
-        result = {}
-        for r in reactions:
-            tmp = self.compute_reaction_Q_value(nuclides, reactions[r])
-            if tmp:
-                result[r] = tmp
+        if (
+            "positron" in reaction.nuclide_reactants
+            and "anti-neutrino_e" in reaction_products
+        ):
+            E = m_e * c**2
+            result += 2.0 * E.to("MeV").value
 
         return result
 
@@ -59,10 +65,3 @@ class Base:
             if sp not in nuclides:
                 return False
         return True
-
-    def get_valid_reactions(self, nuclides, reactions):
-        result = {}
-        for r in reactions:
-            if self.is_valid_reaction(nuclides, reactions[r]):
-                result[r] = reactions[r]
-        return result
