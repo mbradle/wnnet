@@ -3,6 +3,7 @@ import numpy as np
 from astropy.constants import c, m_e
 from scipy.interpolate import interp1d
 
+
 class Base:
     """A class for computing and graphing flows."""
 
@@ -73,16 +74,16 @@ class Base:
         return True
 
     def compute_nuclear_partition_function(self, nuclide, t9):
-        "Method to compute the nuclear partition function for a species.
+        """Method to compute the nuclear partition function for a species.
 
         Args:
             ``nuclide``: A `wnutils <https://wnutils.readthedocs.io>`_ nuclide.
 
-            ``t9`` (:obj:float): The temperature in 10<sup>9</sup> K at which
+            ``t9`` (:obj:float): The temperature in 10\ :sup:`9` K at which
             to compute the partition function.
 
         Returns:
-            A :obj:float giving the nuclear partition function for the species
+            A :obj:`float` giving the nuclear partition function for the species
             at the input temperature.
 
         """
@@ -101,4 +102,3 @@ class Base:
         else:
             f = interp1d(t, lg, kind="cubic")
             return np.power(10.0, f(t9))
-

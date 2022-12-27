@@ -20,8 +20,8 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
         reactions.
 
     Returns:
-        :obj:`dict`: A dictionary of flows for each zone.  The data for
-        each zone are themselvs a :obj:`dict` of reactions with each
+        A :obj:`dict` of flows for each zone.  The data for
+        each zone are themselves a :obj:`dict` of reactions with each
         item in the dictionary a tuple giving the forward and
         reverse flow.
 
@@ -42,7 +42,7 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
         f = {}
         if s_t9 in props and s_rho in props:
             for reaction in net.get_valid_reactions(
-                nuc_xpath = nuc_xpath, reac_xpath = reac_xpath
+                nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
             ):
                 my_reaction = reactions[reaction]
 
