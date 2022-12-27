@@ -1,8 +1,8 @@
 Overview
 ========
 
-wnnet is a python package for computing and plotting nuclear flows from
-`webnucleo <http://webnucleo.org/>`_ files.
+wnnet is a python package for handling
+`webnucleo <http://webnucleo.org/>`_ reaction networks.
 
 Installation
 ------------
