@@ -17,7 +17,7 @@ class Net(wn.Nuc, wr.Reac):
         nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            tmp = self.compute_reaction_Q_value(nuclides, reactions[r])
+            tmp = self.compute_reaction_Q_value(reactions[r])
             if tmp:
                 result[r] = tmp
 
@@ -32,7 +32,8 @@ class Net(wn.Nuc, wr.Reac):
                 result[r] = reactions[r]
         return result
 
-    def compute_reaction_Q_value(self, nuclides, reaction):
+    def compute_reaction_Q_value(self, reaction):
+        nuclides = self.get_nuclides()
         result = 0
         for sp in reaction.nuclide_reactants:
             if sp not in nuclides:
@@ -65,15 +66,15 @@ class Net(wn.Nuc, wr.Reac):
                 return False
         return True
 
-    def compute_rates_for_reaction(self, nuclides, reaction, t9, rho):
+    def compute_rates_for_reaction(self, reaction, t9, rho):
         forward = reaction.compute_rate(t9)
 
         d_exp = 0
 
         for sp in reaction.nuclide_reactants:
-            d_exp += self.compute_NSE_factor(nuclides, nuclides[sp], t9, rho)
+            d_exp += self.compute_NSE_factor(sp, t9, rho)
         for sp in reaction.nuclide_products:
-            d_exp -= self.compute_NSE_factor(nuclides, nuclides[sp], t9, rho)
+            d_exp -= self.compute_NSE_factor(sp, t9, rho)
 
         d_exp += (
             len(reaction.nuclide_reactants) - len(reaction.nuclide_products)
@@ -100,7 +101,7 @@ class Net(wn.Nuc, wr.Reac):
 
         for r in v_reactions:
             result[r] = self.compute_rates_for_reaction(
-                nuclides, v_reactions[r], t9, rho
+                v_reactions[r], t9, rho
             )
 
         return result

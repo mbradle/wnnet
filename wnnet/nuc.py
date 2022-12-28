@@ -17,13 +17,14 @@ class Nuc:
         else:
             return self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
 
-    def compute_nuclear_partition_function(self, nuclide, t9):
+    def compute_nuclear_partition_function(self, name, t9):
         """Method to compute the nuclear partition function for a species.
 
         Args:
-            ``nuclide``: A `wnutils <https://wnutils.readthedocs.io>`_ nuclide.
+            ``name`` (:obj:`str`): A string giving the name of the nuclide
+            whose partition function should be computed.
 
-            ``t9`` (:obj:float): The temperature in 10\ :sup:`9` K at which
+            ``t9`` (:obj:`float`): The temperature in 10\ :sup:`9` K at which
             to compute the partition function.
 
         Returns:
@@ -32,6 +33,7 @@ class Nuc:
 
         """
 
+        nuclide = self.get_nuclides()[name]
         t = nuclide["t9"]
         lg = np.log10(nuclide["partf"])
 
@@ -47,12 +49,14 @@ class Nuc:
             f = interp1d(t, lg, kind="cubic")
             return np.power(10.0, f(t9))
 
-    def compute_quantum_abundance(self, nuclide, t9, rho):
+    def compute_quantum_abundance(self, name, t9, rho):
         assert t9 > 0 and rho > 0
+
+        nuclide = self.get_nuclides()[name]
 
         m = wc.m_u_in_MeV * nuclide["a"] + nuclide["mass excess"]
 
-        result = self.compute_nuclear_partition_function(nuclide, t9) / (rho * wc.N_A)
+        result = self.compute_nuclear_partition_function(name, t9) / (rho * wc.N_A)
 
         p1 = (m * wc.MeV_to_ergs) * wc.k_B * t9 * 1.0e9
         p2 = 2.0 * np.pi * np.power(wc.hbar * wc.c, 2)
@@ -61,7 +65,9 @@ class Nuc:
 
         return result
 
-    def compute_binding_energy(self, nuclides, nuclide):
+    def compute_binding_energy(self, name):
+        nuclides = self.get_nuclides()
+        nuclide = nuclides[name]
         delta_p = nuclides["h1"]["mass excess"]
         delta_n = nuclides["n"]["mass excess"]
 
@@ -71,7 +77,7 @@ class Nuc:
             - nuclide["mass excess"]
         )
 
-    def compute_NSE_factor(self, nuclides, nuclide, t9, rho):
-        return np.log(self.compute_quantum_abundance(nuclide, t9, rho)) + (
-            (self.compute_binding_energy(nuclides, nuclide) * wc.MeV_to_ergs)
+    def compute_NSE_factor(self, name, t9, rho):
+        return np.log(self.compute_quantum_abundance(name, t9, rho)) + (
+            (self.compute_binding_energy(name) * wc.MeV_to_ergs)
         ) / (wc.k_B * (t9 * 1.0e9))
