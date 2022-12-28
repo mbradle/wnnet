@@ -28,16 +28,17 @@ class Reac:
             result *= np.math.factorial(dict[sp])
         return result
 
-    def compute_reaction_duplicate_factors(self, reaction):
+    def compute_reaction_duplicate_factors(self, name):
+        reaction = self.get_reactions()[name]
         return (
             self._compute_duplicate_factor(reaction.nuclide_reactants),
             self._compute_duplicate_factor(reaction.nuclide_products),
         )
 
-    def compute_duplicate_factors(self, reactions):
+    def compute_duplicate_factors(self, reac_xpath = ""):
         result = {}
-        for r in reactions:
-            result[r] = self.compute_reaction_duplicate_factors(reactions[r])
+        for r in self.get_reactions(reac_xpath = reac_xpath):
+            result[r] = self.compute_reaction_duplicate_factors(r)
         return result
 
     def is_weak_reaction(self, name):

@@ -17,7 +17,7 @@ class Net(wn.Nuc, wr.Reac):
         nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            tmp = self.compute_reaction_Q_value(reactions[r])
+            tmp = self.compute_reaction_Q_value(r)
             if tmp:
                 result[r] = tmp
 
@@ -31,8 +31,9 @@ class Net(wn.Nuc, wr.Reac):
                 result[r] = reactions[r]
         return result
 
-    def compute_reaction_Q_value(self, reaction):
+    def compute_reaction_Q_value(self, name):
         nuclides = self.get_nuclides()
+        reaction = self.get_reactions()[name]
         result = 0
         for sp in reaction.nuclide_reactants:
             if sp not in nuclides:
