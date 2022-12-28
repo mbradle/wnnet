@@ -40,7 +40,8 @@ class Reac:
             result[r] = self.compute_reaction_duplicate_factors(reactions[r])
         return result
 
-    def is_weak_reaction(self, reaction):
+    def is_weak_reaction(self, name):
+        reaction = self.get_reactions()[name]
         result = False
         for sp in reaction.reactants + reaction.products:
             if "electron" in sp or "positron" in sp or "neutrino" in sp:

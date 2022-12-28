@@ -46,7 +46,7 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
                 my_reaction = reactions[reaction]
 
                 forward, reverse = net.compute_rates_for_reaction(
-                    my_reaction, float(props[s_t9]), float(props[s_rho])
+                    reaction, float(props[s_t9]), float(props[s_rho])
                 )
 
                 forward *= np.power(
@@ -62,7 +62,7 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
                         y = 0
                     forward *= y
 
-                if not net.is_weak_reaction(my_reaction):
+                if not net.is_weak_reaction(reaction):
                     reverse *= np.power(
                         float(props[s_rho]), len(my_reaction.nuclide_products) - 1
                     )

@@ -25,10 +25,9 @@ class Net(wn.Nuc, wr.Reac):
 
     def get_valid_reactions(self, nuc_xpath="", reac_xpath=""):
         result = {}
-        nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            if self.is_valid_reaction(nuclides, reactions[r]):
+            if self.is_valid_reaction(reactions[r], nuc_xpath = nuc_xpath):
                 result[r] = reactions[r]
         return result
 
@@ -60,13 +59,15 @@ class Net(wn.Nuc, wr.Reac):
 
         return result
 
-    def is_valid_reaction(self, nuclides, reaction):
+    def is_valid_reaction(self, reaction, nuc_xpath = ""):
+        nuclides = self.get_nuclides(nuc_xpath = nuc_xpath)
         for sp in reaction.nuclide_reactants + reaction.nuclide_products:
             if sp not in nuclides:
                 return False
         return True
 
-    def compute_rates_for_reaction(self, reaction, t9, rho):
+    def compute_rates_for_reaction(self, name, t9, rho):
+        reaction = self.get_reactions()[name]
         forward = reaction.compute_rate(t9)
 
         d_exp = 0
@@ -100,8 +101,6 @@ class Net(wn.Nuc, wr.Reac):
         nuclides = self.get_nuclides()
 
         for r in v_reactions:
-            result[r] = self.compute_rates_for_reaction(
-                v_reactions[r], t9, rho
-            )
+            result[r] = self.compute_rates_for_reaction(r, t9, rho)
 
         return result
