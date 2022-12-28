@@ -39,4 +39,3 @@ Usage
 
 The best way to get started using wnnet is to follow the
 `tutorials <http://wnnet.readthedocs.io/en/latest/tutorials.html>`_.
-You may also want to visit our `galleries <https://github.com/mbradle/wnnet/wiki/Galleries>`_ or check out our `Jupyter Notebooks <https://github.com/mbradle/wnnet_tutorials/>`_ or our `Code Samples <https://github.com/mbradle/wnnet/wiki/Code-Samples>`_.
