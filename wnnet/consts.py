@@ -1,6 +1,12 @@
+"""This module contains the physical constants used in the calculations for
+the wnnet package.  webnucleo codes us constants defined in the GNU Scientific
+Library.  Those constants are defined here and should be kept up to date with
+the definitions in the latest version of GSL."""
+
 import numpy as np
 
-# Here are the GSL cgsm definitions.  Keep these up to date.
+# Here are the GSL cgsm definitions.  Only change the values within this
+# block.
 
 GSL_CONST_NUM_AVOGADRO = 6.02214199e23
 GSL_CONST_CGS_SPEED_OF_LIGHT = 2.99792458e10
