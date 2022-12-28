@@ -1,22 +1,35 @@
 """This module contains the physical constants used in the calculations for
-the wnnet package.  webnucleo codes us constants defined in the GNU Scientific
+the wnnet package.  webnucleo codes use constants defined in the GNU Scientific
 Library.  Those constants are defined here and should be kept up to date with
 the definitions in the latest version of GSL."""
 
 import numpy as np
 
-# Here are the GSL cgsm definitions.  Only change the values within this
-# block.
+# The GSL cgsm constants are in the file gsl_consts.py.  Those values should be
+# kept up to date.
 
+#: Avogadro's number
 GSL_CONST_NUM_AVOGADRO = 6.02214199e23
+
+#: Speed of light in vacuum (cm/s)
 GSL_CONST_CGS_SPEED_OF_LIGHT = 2.99792458e10
+
+#: Planck's constant divided by 2pi (ergs-s)
 GSL_CONST_CGS_PLANCKS_CONSTANT_HBAR = 1.05457162825e-27
+
+#: Electron mass (g)
 GSL_CONST_CGS_MASS_ELECTRON = 9.10938188e-28
+
+#: Boltzmann's constant (ergs/K)
 GSL_CONST_CGS_BOLTZMANN = 1.3806504e-16
+
+#: Electron volt (ergs)
 GSL_CONST_CGS_ELECTRON_VOLT = 1.602176487e-12
+
+#: Amu (g)
 GSL_CONST_CGS_UNIFIED_ATOMIC_MASS = 1.660538782e-24
 
-# Conversions for use with the package.  Do not change any lines below this.
+# Conversions for use with the package.
 
 c = GSL_CONST_CGS_SPEED_OF_LIGHT
 k_B = GSL_CONST_CGS_BOLTZMANN
