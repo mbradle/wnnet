@@ -1,12 +1,18 @@
+"""This module handles `webnucleo <https://webnucleo.readthedocs.io>`_ nuclear reaction networks."""
+
 import wnutils.xml as wx
 import wnnet.nuc as wn
 import wnnet.reac as wr
 import numpy as np
 import wnnet.consts as wc
 
-
 class Net(wn.Nuc, wr.Reac):
-    """A class for to store webnucleo networks."""
+    """A class to store webnucleo networks.
+
+    Args:
+        ``file`` (:obj:`str`): A string giving the name of the XML file with the network data.
+
+    """
 
     def __init__(self, file):
         wn.Nuc.__init__(self, file)
@@ -39,14 +45,36 @@ class Net(wn.Nuc, wr.Reac):
         return result
 
     def get_valid_reactions(self, nuc_xpath="", reac_xpath=""):
+        """Method to retrieve the valid reactions in the network.
+
+        Args:
+            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to select nuclides.  Default is all nuclides.
+
+            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
+
+        Returns:
+            A :obj:`dict` of `wnutils <https://wnutils.readthedocs.io>`_ reactions.
+
+        """
+
         result = {}
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            if self.is_valid_reaction(reactions[r], nuc_xpath=nuc_xpath):
+            if self.is_valid_reaction(r, nuc_xpath=nuc_xpath):
                 result[r] = reactions[r]
         return result
 
     def compute_reaction_Q_value(self, name):
+        """Method to compute the Q value for a reaction.
+
+        Args:
+            ``name`` (:obj:`str`):  A string giving the reaction.
+
+        Returns:
+            A :obj:`float` giving the Q value for the reaction.
+
+        """
+
         nuclides = self.get_nuclides()
         reaction = self.get_reactions()[name]
         result = 0
@@ -75,27 +103,48 @@ class Net(wn.Nuc, wr.Reac):
 
         return result
 
-    def is_valid_reaction(self, reaction, nuc_xpath=""):
+    def is_valid_reaction(self, name, nuc_xpath=""):
+        """Method to determine a reaction is valid in the network.
+
+        Args:
+            ``name`` (:obj:`str`):  A string giving the reaction.
+
+            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to select nuclides.  Default is all nuclides.
+
+        Returns:
+            A :obj:`bool` with value True if the reaction is valid and False if not.
+
+        """
+
         nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
+        reaction = self.get_reactions()[name]
         for sp in reaction.nuclide_reactants + reaction.nuclide_products:
             if sp not in nuclides:
                 return False
         return True
 
-    def compute_rates_for_reaction(self, name, t9, rho):
+    def compute_rates_for_reaction(self, name, t9):
+        """Method to compute the forward and reverse rates for a reaction.
+
+        Args:
+            ``name`` (:obj:`str`):  A string giving the reaction.
+
+            ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the rates.
+
+        Returns:
+            A two-element :obj:`tuple` with the first element being the forward rate and the second element being the reverse rate.
+
+        """
+
         reaction = self.get_reactions()[name]
         forward = reaction.compute_rate(t9)
 
         d_exp = 0
 
         for sp in reaction.nuclide_reactants:
-            d_exp += self._compute_NSE_factor(sp, t9, rho)
+            d_exp += self._compute_NSE_factor(sp, t9, 1.)
         for sp in reaction.nuclide_products:
-            d_exp -= self._compute_NSE_factor(sp, t9, rho)
-
-        d_exp += (
-            len(reaction.nuclide_reactants) - len(reaction.nuclide_products)
-        ) * np.log(rho)
+            d_exp -= self._compute_NSE_factor(sp, t9, 1.)
 
         if d_exp < -300.0:
             return (forward, 0)
@@ -107,7 +156,22 @@ class Net(wn.Nuc, wr.Reac):
 
         return (forward, np.exp(d_exp) * (tup[1] / tup[0]) * forward)
 
-    def compute_rates(self, t9, rho, nuc_xpath="", reac_xpath=""):
+    def compute_rates(self, t9, nuc_xpath="", reac_xpath=""):
+        """Method to compute the forward and reverse rates for a reaction collection.
+
+        Args:
+            ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the rates.
+
+            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to select nuclides.  Default is all nuclides.
+
+            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
+         
+
+        Returns:
+            A :obj:`dict` containing the rates.  The key is the reaction string while the value is a two-element  :obj:`tuple` with the first element being the forward rate and the second element being the reverse rate.
+
+        """
+
         v_reactions = self.get_valid_reactions(
             nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
         )
@@ -117,6 +181,6 @@ class Net(wn.Nuc, wr.Reac):
         nuclides = self.get_nuclides()
 
         for r in v_reactions:
-            result[r] = self.compute_rates_for_reaction(r, t9, rho)
+            result[r] = self.compute_rates_for_reaction(r, t9)
 
         return result

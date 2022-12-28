@@ -1,9 +1,11 @@
+"""This module computes various reaction flows in a network."""
+
 import wnutils.xml as wx
 import numpy as np
 
 
 def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
-    """A class to compute flows for a set of zones.
+    """A routine to compute flows for a set of zones.
 
     Args:
         ``net``: A wnnet network.
@@ -46,7 +48,7 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
                 my_reaction = reactions[reaction]
 
                 forward, reverse = net.compute_rates_for_reaction(
-                    reaction, float(props[s_t9]), float(props[s_rho])
+                    reaction, float(props[s_t9])
                 )
 
                 forward *= np.power(
