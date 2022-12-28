@@ -46,11 +46,12 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
             ):
                 my_reaction = reactions[reaction]
 
-                forward = my_reaction.compute_rate(float(props[s_t9]))
+                forward, reverse = net.compute_rates_for_reaction(nuclides, my_reaction, float(props[s_t9]), float(props[s_rho]))
+
                 forward *= np.power(
                     float(props[s_rho]), len(my_reaction.nuclide_reactants) - 1
                 )
-                forward *= dups[reaction][0]
+                forward /= dups[reaction][0]
                 for sp in my_reaction.nuclide_reactants:
                     tup = net.xml.get_z_a_state_from_nuclide_name(sp)
                     key = (sp, tup[0], tup[1])
@@ -61,11 +62,10 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
                     forward *= y
 
                 if not net.is_weak_reaction(my_reaction):
-                    reverse = my_reaction.compute_rate(float(props[s_t9]))
                     reverse *= np.power(
                         float(props[s_rho]), len(my_reaction.nuclide_products) - 1
                     )
-                    reverse *= dups[reaction][1]
+                    reverse /= dups[reaction][1]
                     for sp in my_reaction.nuclide_products:
                         tup = net.xml.get_z_a_state_from_nuclide_name(sp)
                         key = (sp, tup[0], tup[1])
