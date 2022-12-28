@@ -2,7 +2,7 @@ import wnutils.xml as wx
 import wnnet.nuc as wn
 import wnnet.reac as wr
 import numpy as np
-from astropy.constants import c, m_e
+import wnnet.consts as wc
 
 
 class Net(wn.Nuc, wr.Reac):
@@ -49,15 +49,13 @@ class Net(wn.Nuc, wr.Reac):
             "positron" in reaction.nuclide_products
             and "neutrino_e" in reaction.nuclide_products
         ):
-            E = m_e * c**2
-            result -= 2.0 * E.to("MeV").value
+            result -= 2.0 * wc.m_e_in_MeV
 
         if (
             "positron" in reaction.nuclide_reactants
             and "anti-neutrino_e" in reaction_products
         ):
-            E = m_e * c**2
-            result += 2.0 * E.to("MeV").value
+            result += 2.0 * wc.m_e_in_MeV
 
         return result
 

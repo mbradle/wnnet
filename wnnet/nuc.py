@@ -1,8 +1,8 @@
 import wnutils.xml as wx
 import numpy as np
-from astropy.constants import c, u, N_A, k_B, hbar
-import astropy.units as un
+import wnnet.consts as wc
 from scipy.interpolate import interp1d
+
 
 class Nuc:
     """A class for handling nuclei and their data."""
@@ -50,15 +50,12 @@ class Nuc:
     def compute_quantum_abundance(self, nuclide, t9, rho):
         assert t9 > 0 and rho > 0
 
-        m_u = u * c**2
-        m = (m_u.to("MeV").value * nuclide["a"] + nuclide["mass excess"]) * un.MeV
+        m = wc.m_u_in_MeV * nuclide["a"] + nuclide["mass excess"]
 
-        result = self.compute_nuclear_partition_function(nuclide, t9) / (
-            rho * N_A.value
-        )
+        result = self.compute_nuclear_partition_function(nuclide, t9) / (rho * wc.N_A)
 
-        p1 = m.to("erg").value * k_B.cgs.value * t9 * 1.0e9
-        p2 = 2.0 * np.pi * np.power(hbar.cgs.value * c.cgs.value, 2)
+        p1 = (m * wc.MeV_to_ergs) * wc.k_B * t9 * 1.0e9
+        p2 = 2.0 * np.pi * np.power(wc.hbar * wc.c, 2)
 
         result *= np.power((p1 / p2), 1.5)
 
@@ -75,8 +72,6 @@ class Nuc:
         )
 
     def compute_NSE_factor(self, nuclides, nuclide, t9, rho):
-        B = self.compute_binding_energy(nuclides, nuclide) * un.MeV
         return np.log(self.compute_quantum_abundance(nuclide, t9, rho)) + (
-            B.to("erg").value
-        ) / ((k_B.cgs * (t9 * 1.0e9 * un.K)).value)
-
+            (self.compute_binding_energy(nuclides, nuclide) * wc.MeV_to_ergs)
+        ) / (wc.k_B * (t9 * 1.0e9))

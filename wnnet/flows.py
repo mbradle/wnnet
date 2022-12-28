@@ -1,5 +1,4 @@
 import wnutils.xml as wx
-import wnnet.base as fb
 import numpy as np
 
 
@@ -46,7 +45,9 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
             ):
                 my_reaction = reactions[reaction]
 
-                forward, reverse = net.compute_rates_for_reaction(nuclides, my_reaction, float(props[s_t9]), float(props[s_rho]))
+                forward, reverse = net.compute_rates_for_reaction(
+                    nuclides, my_reaction, float(props[s_t9]), float(props[s_rho])
+                )
 
                 forward *= np.power(
                     float(props[s_rho]), len(my_reaction.nuclide_reactants) - 1

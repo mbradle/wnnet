@@ -2,6 +2,7 @@ import wnutils.xml as wx
 import numpy as np
 from scipy.interpolate import interp1d
 
+
 class Reac:
     """A class for handling reactions."""
 
@@ -45,4 +46,3 @@ class Reac:
             if "electron" in sp or "positron" in sp or "neutrino" in sp:
                 result = True
         return result
-
