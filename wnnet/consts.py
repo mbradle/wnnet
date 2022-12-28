@@ -1,6 +1,7 @@
 """This module contains the physical constants used in the calculations for
 the wnnet package.  webnucleo codes use constants defined in the GNU Scientific
-Library.  Those constants are defined here and should be kept up to date with
+Library (GSL).  For consistency, the wnnet package uses the same constants,
+which are defined here.  The constants should be kept up to date with
 the definitions in the latest version of GSL."""
 
 import numpy as np
