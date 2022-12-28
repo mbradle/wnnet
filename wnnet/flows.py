@@ -29,7 +29,7 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    dups = net.compute_duplicate_factors(reactions)
+    dups = net.compute_duplicate_factors()
 
     zone_flows = {}
 

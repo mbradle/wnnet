@@ -38,3 +38,11 @@ wnnet.net module
    :undoc-members:
    :show-inheritance:
 
+wnnet.consts module
+-------------------
+
+.. automodule:: wnnet.consts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

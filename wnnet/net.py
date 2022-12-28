@@ -74,9 +74,9 @@ class Net(wn.Nuc, wr.Reac):
         d_exp = 0
 
         for sp in reaction.nuclide_reactants:
-            d_exp += self.compute_NSE_factor(sp, t9, rho)
+            d_exp += self._compute_NSE_factor(sp, t9, rho)
         for sp in reaction.nuclide_products:
-            d_exp -= self.compute_NSE_factor(sp, t9, rho)
+            d_exp -= self._compute_NSE_factor(sp, t9, rho)
 
         d_exp += (
             len(reaction.nuclide_reactants) - len(reaction.nuclide_products)
@@ -88,7 +88,7 @@ class Net(wn.Nuc, wr.Reac):
         if d_exp > 300.0:
             return (0, 0)
 
-        tup = self.compute_reaction_duplicate_factors(reaction)
+        tup = self.compute_reaction_duplicate_factors(name)
 
         return (forward, np.exp(d_exp) * (tup[1] / tup[0]) * forward)
 

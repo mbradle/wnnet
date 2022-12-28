@@ -77,7 +77,7 @@ class Nuc:
             - nuclide["mass excess"]
         )
 
-    def compute_NSE_factor(self, name, t9, rho):
+    def _compute_NSE_factor(self, name, t9, rho):
         return np.log(self.compute_quantum_abundance(name, t9, rho)) + (
             (self.compute_binding_energy(name) * wc.MeV_to_ergs)
         ) / (wc.k_B * (t9 * 1.0e9))
