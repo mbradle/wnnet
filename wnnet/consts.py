@@ -10,7 +10,7 @@ GSL_CONST_CGS_BOLTZMANN = 1.3806504e-16
 GSL_CONST_CGS_ELECTRON_VOLT = 1.602176487e-12
 GSL_CONST_CGS_UNIFIED_ATOMIC_MASS = 1.660538782e-24
 
-# Conversions for use with the package
+# Conversions for use with the package.  Do not change any lines below this.
 
 c = GSL_CONST_CGS_SPEED_OF_LIGHT
 k_B = GSL_CONST_CGS_BOLTZMANN
