@@ -13,6 +13,21 @@ class Net(wn.Nuc, wr.Reac):
         wr.Reac.__init__(self, file)
 
     def compute_Q_values(self, nuc_xpath="", reac_xpath=""):
+        """A method to compute reaction Q values for valid reactions in the network.
+
+        Args:
+            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select
+            the nuclides.
+
+            ``reac_xpath`` (:obj:`str`, optional): An XPath expression to select
+            the reactions.
+
+        Returns:
+            A :obj:`dict`.  The keys for the dictionary are the reaction
+            strings and the values are the corresponding Q values.
+
+        """
+
         result = {}
         nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reactions = self.get_reactions(reac_xpath=reac_xpath)
@@ -27,7 +42,7 @@ class Net(wn.Nuc, wr.Reac):
         result = {}
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            if self.is_valid_reaction(reactions[r], nuc_xpath = nuc_xpath):
+            if self.is_valid_reaction(reactions[r], nuc_xpath=nuc_xpath):
                 result[r] = reactions[r]
         return result
 
@@ -60,8 +75,8 @@ class Net(wn.Nuc, wr.Reac):
 
         return result
 
-    def is_valid_reaction(self, reaction, nuc_xpath = ""):
-        nuclides = self.get_nuclides(nuc_xpath = nuc_xpath)
+    def is_valid_reaction(self, reaction, nuc_xpath=""):
+        nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         for sp in reaction.nuclide_reactants + reaction.nuclide_products:
             if sp not in nuclides:
                 return False

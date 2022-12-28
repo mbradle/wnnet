@@ -5,13 +5,28 @@ from scipy.interpolate import interp1d
 
 
 class Nuc:
-    """A class for handling nuclei and their data."""
+    """A class for handling nuclei and their data.
+
+    Args:
+        ``file`` (:obj:`str`): A string giving the XML file name with the nuclide data.
+
+    """
 
     def __init__(self, file):
         self.xml = wx.Xml(file)
         self.nuclides = self.xml.get_nuclide_data()
 
     def get_nuclides(self, nuc_xpath=""):
+        """Method to return a collection of nuclides.
+
+        Args:
+            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the nuclides.  Default is all species.
+
+        Returns:
+            A :obj:`dict` containing `wnutils <https://wnutils.readthedocs.io>`_ nuclides.
+
+        """
+
         if not nuc_xpath:
             return self.nuclides
         else:
@@ -50,6 +65,21 @@ class Nuc:
             return np.power(10.0, f(t9))
 
     def compute_quantum_abundance(self, name, t9, rho):
+        """Method to compute the quantum abundance of the nuclide at the input temperature and density.
+
+        Args:
+            `name` (:obj:`str`): The name of the species.
+
+            `t9` (:obj:`float`): The temperature in 10\ ::sup 9 K at which to compute the quantum abundance.
+
+            `rho` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
+
+        Returns:
+            A :obj:`float` giving the quantum abundance for the species at the input conditions.
+
+        """
+
+        assert t9 > 0 and rho > 0
         assert t9 > 0 and rho > 0
 
         nuclide = self.get_nuclides()[name]
@@ -66,6 +96,16 @@ class Nuc:
         return result
 
     def compute_binding_energy(self, name):
+        """Method to compute the nuclear binding energy of a species.
+
+        Args:
+            `name` (:obj:`str`): The name of the species.
+
+        Returns:
+            A :obj:`float` containing the binding energy in MeV.
+
+        """
+
         nuclides = self.get_nuclides()
         nuclide = nuclides[name]
         delta_p = nuclides["h1"]["mass excess"]

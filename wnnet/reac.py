@@ -35,9 +35,9 @@ class Reac:
             self._compute_duplicate_factor(reaction.nuclide_products),
         )
 
-    def compute_duplicate_factors(self, reac_xpath = ""):
+    def compute_duplicate_factors(self, reac_xpath=""):
         result = {}
-        for r in self.get_reactions(reac_xpath = reac_xpath):
+        for r in self.get_reactions(reac_xpath=reac_xpath):
             result[r] = self.compute_reaction_duplicate_factors(r)
         return result
 
