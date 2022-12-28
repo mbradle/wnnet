@@ -6,10 +6,18 @@ wnnet package
    :undoc-members:
    :show-inheritance:
 
-wnnet.base module
+wnnet.nuc module
+----------------
+
+.. automodule:: wnnet.nuc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+wnnet.reac module
 -----------------
 
-.. automodule:: wnnet.base
+.. automodule:: wnnet.reac
    :members:
    :undoc-members:
    :show-inheritance:
