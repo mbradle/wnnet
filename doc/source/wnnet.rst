@@ -6,18 +6,10 @@ wnnet package
    :undoc-members:
    :show-inheritance:
 
-wnnet.nuc module
-----------------
+wnnet.consts module
+-------------------
 
-.. automodule:: wnnet.nuc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wnnet.reac module
------------------
-
-.. automodule:: wnnet.reac
+.. automodule:: wnnet.consts
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,18 +30,26 @@ wnnet.net module
    :undoc-members:
    :show-inheritance:
 
-wnnet.zones module
-------------------
+wnnet.nuc module
+----------------
 
-.. automodule:: wnnet.zones
+.. automodule:: wnnet.nuc
    :members:
    :undoc-members:
    :show-inheritance:
 
-wnnet.consts module
--------------------
+wnnet.reac module
+-----------------
 
-.. automodule:: wnnet.consts
+.. automodule:: wnnet.reac
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+wnnet.zones module
+------------------
+
+.. automodule:: wnnet.zones
    :members:
    :undoc-members:
    :show-inheritance:

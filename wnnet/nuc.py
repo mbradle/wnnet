@@ -12,11 +12,13 @@ class Nuc:
     Args:
         ``file`` (:obj:`str`): A string giving the XML file name with the nuclide data.
 
+        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select nuclides.  Default is all nuclides.
+
     """
 
-    def __init__(self, file):
+    def __init__(self, file, nuc_xpath=""):
         self.xml = wx.Xml(file)
-        self.nuclides = self.xml.get_nuclide_data()
+        self.nuclides = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
 
     def get_nuclides(self, nuc_xpath=""):
         """Method to return a collection of nuclides.

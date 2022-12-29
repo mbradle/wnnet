@@ -6,17 +6,22 @@ import wnnet.reac as wr
 import numpy as np
 import wnnet.consts as wc
 
+
 class Net(wn.Nuc, wr.Reac):
     """A class to store webnucleo networks.
 
     Args:
         ``file`` (:obj:`str`): A string giving the name of the XML file with the network data.
 
+        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select nuclides.  Default is all nuclides.
+
+        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
+
     """
 
-    def __init__(self, file):
-        wn.Nuc.__init__(self, file)
-        wr.Reac.__init__(self, file)
+    def __init__(self, file, nuc_xpath="", reac_xpath=""):
+        wn.Nuc.__init__(self, file, nuc_xpath=nuc_xpath)
+        wr.Reac.__init__(self, file, reac_xpath=reac_xpath)
 
     def compute_Q_values(self, nuc_xpath="", reac_xpath=""):
         """A method to compute reaction Q values for valid reactions in the network.
@@ -58,9 +63,10 @@ class Net(wn.Nuc, wr.Reac):
         """
 
         result = {}
+        nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reactions = self.get_reactions(reac_xpath=reac_xpath)
         for r in reactions:
-            if self.is_valid_reaction(r, nuc_xpath=nuc_xpath):
+            if self.is_valid_reaction(r, nuclides):
                 result[r] = reactions[r]
         return result
 
@@ -103,20 +109,19 @@ class Net(wn.Nuc, wr.Reac):
 
         return result
 
-    def is_valid_reaction(self, name, nuc_xpath=""):
+    def is_valid_reaction(self, name, nuclides):
         """Method to determine a reaction is valid in the network.
 
         Args:
             ``name`` (:obj:`str`):  A string giving the reaction.
 
-            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to select nuclides.  Default is all nuclides.
+            ``nuclides`` (:obj:`dict`):  The appropriate dictionary of `wnutils <https://wnutils.readthedocs.io>`_ nuclides.
 
         Returns:
             A :obj:`bool` with value True if the reaction is valid and False if not.
 
         """
 
-        nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reaction = self.get_reactions()[name]
         for sp in reaction.nuclide_reactants + reaction.nuclide_products:
             if sp not in nuclides:
@@ -142,9 +147,9 @@ class Net(wn.Nuc, wr.Reac):
         d_exp = 0
 
         for sp in reaction.nuclide_reactants:
-            d_exp += self._compute_NSE_factor(sp, t9, 1.)
+            d_exp += self._compute_NSE_factor(sp, t9, 1.0)
         for sp in reaction.nuclide_products:
-            d_exp -= self._compute_NSE_factor(sp, t9, 1.)
+            d_exp -= self._compute_NSE_factor(sp, t9, 1.0)
 
         if d_exp < -300.0:
             return (forward, 0)
@@ -165,7 +170,7 @@ class Net(wn.Nuc, wr.Reac):
             ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to select nuclides.  Default is all nuclides.
 
             ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
-         
+
 
         Returns:
             A :obj:`dict` containing the rates.  The key is the reaction string while the value is a two-element  :obj:`tuple` with the first element being the forward rate and the second element being the reverse rate.

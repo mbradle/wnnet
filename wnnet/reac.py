@@ -11,11 +11,13 @@ class Reac:
     Args:
         ``file`` (:obj:`str`): A string giving the XML file name with the reaction data.
 
+        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
+
     """
 
-    def __init__(self, file):
+    def __init__(self, file, reac_xpath=""):
         self.xml = wx.Xml(file)
-        self.reactions = self.xml.get_reaction_data()
+        self.reactions = self.xml.get_reaction_data(reac_xpath=reac_xpath)
 
     def get_reactions(self, reac_xpath=""):
         """Method to return a collection of reactions.

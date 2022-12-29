@@ -2,6 +2,7 @@
 
 import wnutils.xml as wx
 
+
 class Zones_Xml:
     """A class for handling webnucleo zones.
 
