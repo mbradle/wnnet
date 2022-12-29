@@ -165,7 +165,7 @@ def compute_link_flows_for_zones(
                         )
                         reverse /= dups[reaction][1]
                         if include_dt:
-                            reverse *= dt
+                            reverse *= float(props[s_dt])
 
                         for i in range(len(products)):
                             source = products[i]
