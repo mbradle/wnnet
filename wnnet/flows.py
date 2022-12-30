@@ -80,7 +80,13 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
 
 def compute_link_flows_for_zones(
-    net, zones, nuc_xpath="", reac_xpath="", direction="both", include_dt=False
+    net,
+    zones,
+    nuc_xpath="",
+    reac_xpath="",
+    direction="both",
+    include_dt=False,
+    order="normal",
 ):
     """A routine to compute link flows for a set of zones.
 
@@ -101,6 +107,8 @@ def compute_link_flows_for_zones(
 
         ``include_dt`` (:obj:`bool`, optional):  Boolean determining whether to include the *dt* (time interval) in the flow (True) or not (False).  Default is False.
 
+        ``order`` (:obj:`str`, optional):  A string indicating the order of the links.  Default is *normal*, in which the *source* and *target* of the link are in the time-forward direction of the reaction.  For *reversed*, the *source* and *target* are in the opposite of the time-forward direction of the reaction such that the *target* is the *contribution* to the *source* over some interval.
+
     Returns:
         A :obj:`dict` of flow links for each zone.  The data for
         each zone are themselves a :obj:`dict` of reactions with each
@@ -110,6 +118,9 @@ def compute_link_flows_for_zones(
         direction of the reaction.
 
     """
+
+    assert direction == "forward" or direction == "reverse" or direction == "both"
+    assert order == "normal" or order == "reversed"
 
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
@@ -155,7 +166,10 @@ def compute_link_flows_for_zones(
                             net, x, reactants, exclude_index=i
                         )
                         for target in products:
-                            tup = (source, target, forward * p_source)
+                            if order == "normal":
+                                tup = (source, target, forward * p_source)
+                            else:
+                                tup = (target, source, forward * p_source)
                             tup_array.append(tup)
 
                 if not net.is_weak_reaction(reaction):
@@ -173,7 +187,10 @@ def compute_link_flows_for_zones(
                                 net, x, products, exclude_index=i
                             )
                             for target in reactants:
-                                tup = (source, target, reverse * p_source)
+                                if order == "normal":
+                                    tup = (source, target, reverse * p_source)
+                                else:
+                                    tup = (target, source, reverse * p_source)
                                 tup_array.append(tup)
 
                 f[reaction] = tup_array
