@@ -332,17 +332,32 @@ def _color_edges(G, net, color_tuples):
 
 def _get_subset_and_anchors(net, induced_nuc_xpath):
     val = []
-    val2 = []
+    dict = {}
+    z_dict = {}
     nuclides = net.get_nuclides()
     for sp in net.get_nuclides(nuc_xpath=induced_nuc_xpath):
         val.append(sp)
-        val2.append((nuclides[sp]["z"], nuclides[sp]["a"], sp))
+        dict[(nuclides[sp]["z"], nuclides[sp]["a"])] = sp
+        if nuclides[sp]["z"] not in z_dict:
+            z_dict[nuclides[sp]["z"]] = []
+        else:
+            z_dict[nuclides[sp]["z"]].append(nuclides[sp]["a"])
 
-    val2 = sorted(val2)
-    anchor_low = val2[0][2]
-    anchor_high = val2[-1][2]
+    z_array = []
+    
+    for z in z_dict:
+        z_array.append(z)
+        z_dict[z].sort()
 
-    return (val, anchor_low, anchor_high)
+    z_array.sort()
+        
+    anchors = []
+    anchors.append(dict[(z_array[0], z_dict[z_array[0]][0])])
+    anchors.append(dict[(z_array[0], z_dict[z_array[0]][-1])])
+    anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][0])])
+    anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][-1])])
+
+    return (val, anchors)
 
 
 def _apply_graph_attributes(G, graph_attributes):
@@ -418,7 +433,7 @@ def create_flow_graph(
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
+    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
     DG = nx.MultiDiGraph()
 
@@ -488,10 +503,9 @@ def create_flow_graph(
 
     # Restore anchors
 
-    if anchor_low not in DG.nodes:
-        DG.add_node(anchor_low, style="invis")
-    if anchor_high not in DG.nodes:
-        DG.add_node(anchor_high, style="invis")
+    for anchor in anchors:
+        if anchor not in DG.nodes:
+            DG.add_node(anchor, style="invis")
 
     # Get new subset
 
@@ -592,7 +606,7 @@ def create_network_graph(
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
+    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
     DG = nx.MultiDiGraph()
 
@@ -631,10 +645,9 @@ def create_network_graph(
 
     # Restore anchors
 
-    if anchor_low not in DG.nodes:
-        DG.add_node(anchor_low, style="invis")
-    if anchor_high not in DG.nodes:
-        DG.add_node(anchor_high, style="invis")
+    for anchor in anchors:
+        if anchor not in DG.nodes:
+            DG.add_node(anchor, style="invis")
 
     # Subgraph
 
@@ -688,7 +701,7 @@ def create_links_flow_graph(
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
+    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
     DG = nx.MultiDiGraph()
 
@@ -728,10 +741,10 @@ def create_links_flow_graph(
 
     # Restore anchors
 
-    if anchor_low not in DG.nodes:
-        DG.add_node(anchor_low, style="invis")
-    if anchor_high not in DG.nodes:
-        DG.add_node(anchor_high, style="invis")
+    for anchor in anchors:
+        if anchor not in DG.nodes:
+            DG.add_node(anchor, style="invis")
+
 
     # Get subset
 
