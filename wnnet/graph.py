@@ -1,9 +1,11 @@
 import operator
 from math import floor, log10
 import networkx as nx
+import wnutils.base as wb
 import wnnet.net as wn
 import wnnet.zones as wz
 import wnnet.flows as wf
+
 
 def get_solar_species():
     return [
@@ -295,38 +297,40 @@ def get_solar_species():
         "u238",
     ]
 
-def make_time_t9_rho_string(zone):
+
+def make_time_t9_rho_string(time, t9, rho):
     def fexp(f):
-        return int(floor(log10(abs(f)))) if f != 0 else 0
+        # Add 0.01 for rounding for :.2f mantissa formating
+        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0.0
 
     def fman(f):
-        return f / 10 ** fexp(f)
+        return f / 10.0 ** fexp(f)
 
-    props = zone["properties"]
+    if time:
+        return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
+            fman(time), fexp(time), t9, fman(rho), fexp(rho)
+        )
+    else:
+        return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
+            t9, fman(rho), fexp(rho)
+        )
 
-    time = float(props["time"])
-    t9 = float(props["t9"])
-    rho = float(props["rho"]) * (1.0 + 1.0e-6)  # To correct for 10.00 mantissa
 
-    return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
-        float(fman(time)), int(fexp(time)), t9, float(fman(rho)), int(fexp(rho))
-    )
-
-
-def _color_edges(G, reactions, color_tuples):
+def _color_edges(G, net, color_tuples):
     color = {}
-    for reaction in reactions:
+    for reaction in net.get_reactions():
         color[reaction] = "black"
 
-    for color_tup in color_tuples:
-        for reaction in net.get_reactions(reac_xpath=color_tup[0]):
-            color[reaction] = color_tup[1]
+    if color_tuples:
+        for color_tup in color_tuples:
+            for reaction in net.get_reactions(reac_xpath=color_tup[0]):
+                color[reaction] = color_tup[1]
 
-    for edge in G.edges:
-        G.get_edge_data(*edge)["color"] = color[G.get_edge_data(*edge)["reaction"]]
+        for edge in G.edges:
+            G.edges[edge]["color"] = color[G.edges[edge]["reaction"]]
 
 
-def _get_subset_and_anchors(net, nuc_xpath):
+def _get_subset_and_anchors(net, induced_nuc_xpath):
     val = []
     val2 = []
     nuclides = net.get_nuclides()
@@ -342,20 +346,23 @@ def _get_subset_and_anchors(net, nuc_xpath):
 
 
 def _apply_graph_attributes(G, graph_attributes):
-    for key in graph_attributes:
-        G.graph[key] = graph_attributes[key]
+    if graph_attributes:
+        for key in graph_attributes:
+            G.graph[key] = graph_attributes[key]
 
 
 def _apply_node_attributes(G, node_attributes):
-    for key in node_attributes:
-        for node in G.nodes:
-            G.nodes[node][key] = node_attributes[key]
+    if node_attributes:
+        for key in node_attributes:
+            for node in G.nodes:
+                G.nodes[node][key] = node_attributes[key]
 
 
 def _apply_edge_attributes(G, edge_attributes):
-    for key in edge_attributes:
-        for edge in G.edges:
-            G.edges[edge][key] = edge_attributes[key]
+    if edge_attributes:
+        for key in edge_attributes:
+            for edge in G.edges:
+                G.edges[edge][key] = edge_attributes[key]
 
 
 def _apply_solar_node_attributes(G, solar_species, solar_node_attributes):
@@ -374,20 +381,25 @@ def _apply_solar_node_attributes(G, solar_species, solar_node_attributes):
 
 
 def _apply_special_node_attributes(G, special_node_attributes):
-    for node in special_node_attributes:
-        for key in special_node_attributes[node]:
-            G.nodes[node][key] = special_node_attributes[node][key]
+    if special_node_attributes:
+        for node in special_node_attributes:
+            for key in special_node_attributes[node]:
+                G.nodes[node][key] = special_node_attributes[node][key]
 
 
-def create_flow_graphs(
+def create_flow_graph(
     net,
-    zones,
+    t9,
+    rho,
+    mass_fractions,
+    time=None,
     induced_nuc_xpath="",
     induced_reac_xpath="",
-    color_tuples=None,
+    reaction_color_tuples=None,
     threshold=0.01,
     node_shape="box",
     scale=10,
+    allow_isolated_species=False,
     title_func=None,
     graph_attributes=None,
     edge_attributes=None,
@@ -402,92 +414,341 @@ def create_flow_graphs(
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    f = wf.compute_flows_for_zones(net, zones, reac_xpath=induced_reac_xpath)
+    f = wf.compute_flows(net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath)
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
     val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
 
-    # Loop on zones
+    DG = nx.MultiDiGraph()
 
-    for zone in f:
-        DG = nx.MultiDiGraph()
+    for nuc in nuclides:
+        DG.add_node(nuc, shape=node_shape)
 
-        for nuc in nuclides:
-            DG.add_node(nuc, shape=node_shape)
+    for r in f:
+        tup = f[r]
 
-        for r in f[zone]:
-            tup = f[zone][r]
-
-            if tup[0] > 0:
-                for reactant in reactions[r].nuclide_reactants:
-                    for product in reactions[r].nuclide_products:
-                        DG.add_edge(reactant, product, weight=tup[0], reaction=r)
-
-            if tup[1] > 0:
+        if tup[0] > 0:
+            for reactant in reactions[r].nuclide_reactants:
                 for product in reactions[r].nuclide_products:
-                    for reactant in reactions[r].nuclide_reactants:
-                        DG.add_edge(product, reactant, weight=tup[1], reaction=r)
+                    DG.add_edge(
+                        reactant, product, weight=tup[0], reaction=r, arrowsize=0.2
+                    )
 
-        if title_func:
-            DG.graph["label"] = title_func(zones[zone])
+        if tup[1] > 0:
+            for product in reactions[r].nuclide_products:
+                for reactant in reactions[r].nuclide_reactants:
+                    DG.add_edge(
+                        product, reactant, weight=tup[1], reaction=r, arrowsize=0.2
+                    )
+
+    # Title
+
+    if title_func:
+        DG.graph["label"] = title_func()
+    else:
+        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
+
+    # Apply attributes
+
+    _apply_graph_attributes(DG, graph_attributes)
+
+    _apply_node_attributes(DG, node_attributes)
+
+    _apply_edge_attributes(DG, edge_attributes)
+
+    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+
+    _apply_special_node_attributes(DG, special_node_attributes)
+
+    # Subgraph and maximum flow within subgraph
+
+    S = nx.subgraph(DG, val)
+
+    w = nx.get_edge_attributes(S, "weight")
+
+    f_max = max(w.items(), key=operator.itemgetter(1))[1]
+
+    # Set penwidth.  Remove edges that are below threshold
+
+    remove_edges = []
+    for edge in DG.edges:
+        penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
+        if penwidth > threshold:
+            DG.get_edge_data(*edge)["penwidth"] = penwidth
         else:
-            DG.graph["label"] = make_time_t9_rho_string(zones[zone])
+            remove_edges.append(edge)
 
-        _apply_graph_attributes(DG, graph_attributes)
+    DG.remove_edges_from(remove_edges)
 
-        _apply_node_attributes(DG, node_attributes)
+    # Remove isolated nodes if desired
 
-        _apply_edge_attributes(DG, edge_attributes)
-
-        _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
-
-        _apply_special_node_attributes(DG, special_node_attributes)
-
-        S = nx.subgraph(DG, val)
-
-        w = nx.get_edge_attributes(S, "weight")
-
-        f_max = max(w.items(), key=operator.itemgetter(1))[1]
-
-        # Set penwidth.  Remove edges that are below threshold
-
-        remove_edges = []
-        for edge in DG.edges:
-            penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
-            if penwidth > threshold:
-                DG.get_edge_data(*edge)["penwidth"] = penwidth
-            else:
-                remove_edges.append(edge)
-
-        DG.remove_edges_from(remove_edges)
-
-        # Remove isolated nodes
-
+    if not allow_isolated_species:
         DG.remove_nodes_from(list(nx.isolates(DG)))
 
-        # Restore anchors
+    # Restore anchors
 
-        if anchor_low not in DG.nodes:
-            DG.add_node(anchor_low, style="invis")
-        if anchor_high not in DG.nodes:
-            DG.add_node(anchor_high, style="invis")
+    if anchor_low not in DG.nodes:
+        DG.add_node(anchor_low, style="invis")
+    if anchor_high not in DG.nodes:
+        DG.add_node(anchor_high, style="invis")
 
-        # Get new subset
+    # Get new subset
 
-        S2 = nx.subgraph(DG, val)
+    S2 = nx.subgraph(DG, val)
 
-        for node in S2.nodes:
-            nuc = nuclides[node]
-            z = nuc["z"]
-            n = nuc["a"] - z
-            S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+    g_names = wb.Base().get_graphviz_names(list(S2.nodes.keys()))
 
-        _color_edges(S2, reactions, color_tuples)
+    for node in S2.nodes:
+        nuc = nuclides[node]
+        z = nuc["z"]
+        n = nuc["a"] - z
+        S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S2.nodes[node]["label"] = g_names[node]
 
-        S2.nodes["fe58"]["label"] = "<<sup>58</sup>Fe<sub>g</sub>>"
+    _color_edges(S2, net, reaction_color_tuples)
 
-        result[zone] = S2
+    return S2
+
+
+def create_zone_flow_graphs(
+    net,
+    zones,
+    induced_nuc_xpath="",
+    induced_reac_xpath="",
+    reaction_color_tuples=None,
+    threshold=0.01,
+    node_shape="box",
+    scale=10,
+    allow_isolated_species=False,
+    title_func=None,
+    graph_attributes=None,
+    edge_attributes=None,
+    node_attributes=None,
+    solar_species=None,
+    solar_node_attributes=None,
+    special_node_attributes=None,
+):
+
+    result = {}
+
+    # Loop on zones
+
+    for zone in zones:
+        s_t9 = "t9"
+        s_rho = "rho"
+        s_time = "time"
+        props = zones[zone]["properties"]
+        if s_t9 in props and s_rho in props and s_time in props:
+            result[zone] = create_flow_graph(
+                net,
+                float(props[s_t9]),
+                float(props[s_rho]),
+                zones[zone]["mass fractions"],
+                time=float(props[s_time]),
+                induced_nuc_xpath=induced_nuc_xpath,
+                induced_reac_xpath=induced_reac_xpath,
+                reaction_color_tuples=reaction_color_tuples,
+                threshold=threshold,
+                node_shape=node_shape,
+                scale=scale,
+                allow_isolated_species=allow_isolated_species,
+                title_func=title_func,
+                graph_attributes=graph_attributes,
+                edge_attributes=edge_attributes,
+                node_attributes=node_attributes,
+                solar_species=solar_species,
+                solar_node_attributes=solar_node_attributes,
+                special_node_attributes=special_node_attributes,
+            )
 
     return result
 
+
+def create_network_graph(
+    net,
+    induced_nuc_xpath="",
+    induced_reac_xpath="",
+    direction="both",
+    reaction_color_tuples=None,
+    threshold=0.01,
+    node_shape="box",
+    scale=10,
+    allow_isolated_species=False,
+    graph_attributes=None,
+    edge_attributes=None,
+    node_attributes=None,
+    solar_species=None,
+    solar_node_attributes=None,
+    special_node_attributes=None,
+):
+
+    assert direction == "forward" or direction == "reverse" or direction == "both"
+
+    result = {}
+
+    nuclides = net.get_nuclides()
+    reactions = net.get_reactions(reac_xpath=induced_reac_xpath)
+
+    # Get the subset of nuclides to view in the graph.  Get anchors.
+
+    val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
+
+    DG = nx.MultiDiGraph()
+
+    for nuc in nuclides:
+        DG.add_node(nuc, shape=node_shape)
+
+    for r in reactions:
+        if direction == "forward" or direction == "both":
+            for reactant in reactions[r].nuclide_reactants:
+                for product in reactions[r].nuclide_products:
+                    DG.add_edge(reactant, product, reaction=r, arrowsize=0.2)
+
+        if not net.is_weak_reaction(r) and (
+            direction == "reverse" or direction == "both"
+        ):
+            for product in reactions[r].nuclide_products:
+                for reactant in reactions[r].nuclide_reactants:
+                    DG.add_edge(product, reactant, reaction=r, arrowsize=0.2)
+
+    # Apply attributes
+
+    _apply_graph_attributes(DG, graph_attributes)
+
+    _apply_node_attributes(DG, node_attributes)
+
+    _apply_edge_attributes(DG, edge_attributes)
+
+    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+
+    _apply_special_node_attributes(DG, special_node_attributes)
+
+    # Remove isolated nodes if desired
+
+    if not allow_isolated_species:
+        DG.remove_nodes_from(list(nx.isolates(DG)))
+
+    # Restore anchors
+
+    if anchor_low not in DG.nodes:
+        DG.add_node(anchor_low, style="invis")
+    if anchor_high not in DG.nodes:
+        DG.add_node(anchor_high, style="invis")
+
+    # Subgraph
+
+    S = nx.subgraph(DG, val)
+
+    g_names = wb.Base().get_graphviz_names(list(S.nodes.keys()))
+
+    for node in S.nodes:
+        nuc = nuclides[node]
+        z = nuc["z"]
+        n = nuc["a"] - z
+        S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S.nodes[node]["label"] = g_names[node]
+
+    _color_edges(S, net, reaction_color_tuples)
+
+    return S
+
+
+def create_links_flow_graph(
+    net,
+    t9,
+    rho,
+    mass_fractions,
+    time=None,
+    induced_nuc_xpath="",
+    induced_reac_xpath="",
+    direction="both",
+    reaction_color_tuples=None,
+    threshold=0.01,
+    node_shape="box",
+    scale=10,
+    allow_isolated_species=False,
+    title_func=None,
+    graph_attributes=None,
+    edge_attributes=None,
+    node_attributes=None,
+    solar_species=None,
+    solar_node_attributes=None,
+    special_node_attributes=None,
+):
+
+    result = {}
+
+    nuclides = net.get_nuclides()
+    reactions = net.get_reactions()
+
+    f = wf.compute_link_flows(
+        net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath, direction=direction
+    )
+
+    # Get the subset of nuclides to view in the graph.  Get anchors.
+
+    val, anchor_low, anchor_high = _get_subset_and_anchors(net, induced_nuc_xpath)
+
+    DG = nx.MultiDiGraph()
+
+    for nuc in nuclides:
+        DG.add_node(nuc, shape=node_shape)
+
+    for r in f:
+        tups = f[r]
+
+        for tup in tups:
+            if tup[2] > 0:
+                DG.add_edge(tup[0], tup[1], weight=tup[2], reaction=r, arrowsize=0.2)
+
+    # Title
+
+    if title_func:
+        DG.graph["label"] = title_func()
+    else:
+        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
+
+    # Apply attributes
+
+    _apply_graph_attributes(DG, graph_attributes)
+
+    _apply_node_attributes(DG, node_attributes)
+
+    _apply_edge_attributes(DG, edge_attributes)
+
+    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+
+    _apply_special_node_attributes(DG, special_node_attributes)
+
+    # Remove isolated nodes if desired
+
+    if not allow_isolated_species:
+        DG.remove_nodes_from(list(nx.isolates(DG)))
+
+    # Restore anchors
+
+    if anchor_low not in DG.nodes:
+        DG.add_node(anchor_low, style="invis")
+    if anchor_high not in DG.nodes:
+        DG.add_node(anchor_high, style="invis")
+
+    # Get subset
+
+    S = nx.subgraph(DG, val)
+
+    g_names = wb.Base().get_graphviz_names(list(S.nodes.keys()))
+
+    for node in S.nodes:
+        nuc = nuclides[node]
+        z = nuc["z"]
+        n = nuc["a"] - z
+        S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S.nodes[node]["label"] = g_names[node]
+
+    for edge in S.edges:
+        S.edges[edge]["weight"] = 1.0 / S.edges[edge]["weight"]
+
+    _color_edges(S, net, reaction_color_tuples)
+
+    return S
