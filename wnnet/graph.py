@@ -758,9 +758,6 @@ def create_links_flow_graph(
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
         S.nodes[node]["label"] = g_names[node]
 
-    for edge in S.edges:
-        S.edges[edge]["weight"] = 1.0 / S.edges[edge]["weight"]
-
     _color_edges(S, net, reaction_color_tuples)
 
     return S
