@@ -1,7 +1,6 @@
 import operator
 from math import floor, log10
 import networkx as nx
-import wnutils.base as wb
 import wnnet.net as wn
 import wnnet.zones as wz
 import wnnet.flows as wf
@@ -511,7 +510,7 @@ def create_flow_graph(
 
     S2 = nx.subgraph(DG, val)
 
-    g_names = wb.Base().get_graphviz_names(list(S2.nodes.keys()))
+    g_names = net.xml.get_graphviz_names(list(S2.nodes.keys()))
 
     for node in S2.nodes:
         nuc = nuclides[node]
@@ -653,7 +652,7 @@ def create_network_graph(
 
     S = nx.subgraph(DG, val)
 
-    g_names = wb.Base().get_graphviz_names(list(S.nodes.keys()))
+    g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
 
     for node in S.nodes:
         nuc = nuclides[node]
@@ -750,7 +749,7 @@ def create_links_flow_graph(
 
     S = nx.subgraph(DG, val)
 
-    g_names = wb.Base().get_graphviz_names(list(S.nodes.keys()))
+    g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
 
     for node in S.nodes:
         nuc = nuclides[node]
