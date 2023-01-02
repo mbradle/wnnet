@@ -2,6 +2,7 @@
 
 import wnutils.xml as wx
 import numpy as np
+import concurrent.futures
 
 
 def _compute_flows_for_valid_reactions(
@@ -9,6 +10,8 @@ def _compute_flows_for_valid_reactions(
 ):
 
     result = {}
+
+    print(t9, rho)
 
     for reaction in valid_reactions:
         my_reaction = reactions[reaction]
@@ -97,8 +100,6 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
     """
 
-    zone_flows = {}
-
     reactions = net.get_reactions()
 
     valid_reactions = net.get_valid_reactions(
@@ -107,20 +108,40 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
     dups = net.compute_duplicate_factors()
 
-    for zone in zones:
+    zone_flows = {}
+
+    zone_list = [zone for zone in zones]
+
+    input_tuples = []
+
+    for i in range(len(zone_list)):
+        zone = zones[zone_list[i]]
         s_t9 = "t9"
         s_rho = "rho"
-        props = zones[zone]["properties"]
+        props = zone["properties"]
         if s_t9 in props and s_rho in props:
-            zone_flows[zone] = _compute_flows_for_valid_reactions(
-                net,
-                float(props[s_t9]),
-                float(props[s_rho]),
-                zones[zone]["mass fractions"],
-                reactions,
-                valid_reactions,
-                dups,
+            input_tuples.append(
+                (
+                    net,
+                    float(props[s_t9]),
+                    float(props[s_rho]),
+                    zone["mass fractions"],
+                    reactions,
+                    valid_reactions,
+                    dups,
+                )
             )
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        jobs = [
+            executor.submit(_compute_flows_for_valid_reactions, *input_tuple)
+            for input_tuple in input_tuples
+        ]
+
+        results = [r.result() for r in jobs]
+
+        for j in range(len(zone_list)):
+            zone_flows[zone_list[j]] = results[j]
 
     return zone_flows
 
