@@ -404,9 +404,6 @@ def _apply_special_node_attributes(G, special_node_attributes):
 def _create_flow_graph(
     net,
     f,
-    time,
-    t9,
-    rho,
     subset_nuclides,
     anchors,
     allow_isolated_species,
@@ -449,10 +446,7 @@ def _create_flow_graph(
 
     # Title
 
-    if title_func:
-        DG.graph["label"] = title_func()
-    else:
-        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
+    DG.graph["label"] = title_func
 
     # Apply attributes
 
@@ -472,24 +466,28 @@ def _create_flow_graph(
 
     w = nx.get_edge_attributes(S, "weight")
 
-    f_max = max(w.items(), key=operator.itemgetter(1))[1]
-
     # Set penwidth.  Remove edges that are below threshold
 
-    remove_edges = []
-    for edge in DG.edges:
-        penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
-        if penwidth > threshold:
-            DG.get_edge_data(*edge)["penwidth"] = penwidth
-        else:
-            remove_edges.append(edge)
+    if len(w) > 0:
+        f_max = max(w.items(), key=operator.itemgetter(1))[1]
 
-    DG.remove_edges_from(remove_edges)
+        remove_edges = []
+        for edge in DG.edges:
+            penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
+            if penwidth > threshold:
+                DG.get_edge_data(*edge)["penwidth"] = penwidth
+            else:
+                remove_edges.append(edge)
+
+        DG.remove_edges_from(remove_edges)
 
     # Remove isolated nodes if desired
 
     if not allow_isolated_species:
-        DG.remove_nodes_from(list(nx.isolates(DG)))
+        isolated_nodes = list(nx.isolates(DG))
+        for node in isolated_nodes:
+            if node not in solar_species:
+                DG.remove_node(node)
 
     # Restore anchors
 
@@ -542,23 +540,33 @@ def create_flow_graph(
 
     subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
+    # Solar species
+
+    my_solar_species = solar_species
+    if not solar_species:
+        my_solar_species = get_solar_species()
+
+    # Title
+
+    if not title_func:
+        my_title_func = make_time_t9_rho_string(time, t9, rho)
+    else:
+        my_title_func = title_func
+
     return _create_flow_graph(
         net,
         f,
-        time,
-        t9,
-        rho,
         subset_nuclides,
         anchors,
         allow_isolated_species,
         reaction_color_tuples,
         threshold,
         scale,
-        title_func,
+        my_title_func,
         graph_attributes,
         node_attributes,
         edge_attributes,
-        solar_species,
+        my_solar_species,
         solar_node_attributes,
         special_node_attributes,
     )
@@ -588,34 +596,47 @@ def create_zone_flow_graphs(
 
     subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
+    # Solar species
+
+    my_solar_species = solar_species
+    if not solar_species:
+        my_solar_species = get_solar_species()
+
     # Loop on zones
 
     for zone in f:
         props = zones[zone]["properties"]
-        s_time  = "time"
+        s_time = "time"
         s_t9 = "t9"
         s_rho = "rho"
+
+        time = None
         if s_time in props:
             time = float(props[s_time])
+
+        # Title
+
+        if not title_func:
+            t9 = float(props[s_t9])
+            rho = float(props[s_rho])
+            my_title_func = make_time_t9_rho_string(time, t9, rho)
         else:
-            time = None
+            my_title_func = title_func
+
         result[zone] = _create_flow_graph(
             net,
             f[zone],
-            time,
-            float(props[s_t9]),
-            float(props[s_rho]),
             subset_nuclides,
             anchors,
             allow_isolated_species,
             reaction_color_tuples,
             threshold,
             scale,
-            title_func,
+            my_title_func,
             graph_attributes,
             node_attributes,
             edge_attributes,
-            solar_species,
+            my_solar_species,
             solar_node_attributes,
             special_node_attributes,
         )
@@ -761,10 +782,7 @@ def create_links_flow_graph(
 
     # Title
 
-    if title_func:
-        DG.graph["label"] = title_func()
-    else:
-        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
+    DG.graph["label"] = title_func()
 
     # Apply attributes
 
