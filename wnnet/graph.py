@@ -434,6 +434,12 @@ def create_flow_graph(
 
     val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
+    # Solar species
+
+    my_solar_species = solar_species
+    if not solar_species:
+        my_solar_species = get_solar_species()
+
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
@@ -471,7 +477,7 @@ def create_flow_graph(
 
     _apply_edge_attributes(DG, edge_attributes)
 
-    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+    _apply_solar_node_attributes(DG, my_solar_species, solar_node_attributes)
 
     _apply_special_node_attributes(DG, special_node_attributes)
 
@@ -501,7 +507,7 @@ def create_flow_graph(
     if not allow_isolated_species:
         isolated_nodes = list(nx.isolates(DG))
         for node in isolated_nodes:
-            if node not in solar_species:
+            if node not in my_solar_species:
                 DG.remove_node(node)
 
     # Restore anchors
