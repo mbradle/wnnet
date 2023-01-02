@@ -343,13 +343,13 @@ def _get_subset_and_anchors(net, induced_nuc_xpath):
             z_dict[nuclides[sp]["z"]].append(nuclides[sp]["a"])
 
     z_array = []
-    
+
     for z in z_dict:
         z_array.append(z)
         z_dict[z].sort()
 
     z_array.sort()
-        
+
     anchors = []
     anchors.append(dict[(z_array[0], z_dict[z_array[0]][0])])
     anchors.append(dict[(z_array[0], z_dict[z_array[0]][-1])])
@@ -401,43 +401,34 @@ def _apply_special_node_attributes(G, special_node_attributes):
                 G.nodes[node][key] = special_node_attributes[node][key]
 
 
-def create_flow_graph(
+def _create_flow_graph(
     net,
+    f,
+    time,
     t9,
     rho,
-    mass_fractions,
-    time=None,
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    reaction_color_tuples=None,
-    threshold=0.01,
-    node_shape="box",
-    scale=10,
-    allow_isolated_species=False,
-    title_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
+    subset_nuclides,
+    anchors,
+    allow_isolated_species,
+    reaction_color_tuples,
+    threshold,
+    scale,
+    title_func,
+    graph_attributes,
+    node_attributes,
+    edge_attributes,
+    solar_species,
+    solar_node_attributes,
+    special_node_attributes,
 ):
-
-    result = {}
 
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    f = wf.compute_flows(net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath)
-
-    # Get the subset of nuclides to view in the graph.  Get anchors.
-
-    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
-
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape=node_shape)
+        DG.add_node(nuc, shape="box")
 
     for r in f:
         tup = f[r]
@@ -477,7 +468,7 @@ def create_flow_graph(
 
     # Subgraph and maximum flow within subgraph
 
-    S = nx.subgraph(DG, val)
+    S = nx.subgraph(DG, subset_nuclides)
 
     w = nx.get_edge_attributes(S, "weight")
 
@@ -508,7 +499,7 @@ def create_flow_graph(
 
     # Get new subset
 
-    S2 = nx.subgraph(DG, val)
+    S2 = nx.subgraph(DG, subset_nuclides)
 
     g_names = net.xml.get_graphviz_names(list(S2.nodes.keys()))
 
@@ -524,6 +515,55 @@ def create_flow_graph(
     return S2
 
 
+def create_flow_graph(
+    net,
+    t9,
+    rho,
+    mass_fractions,
+    time=None,
+    induced_nuc_xpath="",
+    induced_reac_xpath="",
+    reaction_color_tuples=None,
+    threshold=0.01,
+    scale=10,
+    allow_isolated_species=False,
+    title_func=None,
+    graph_attributes=None,
+    edge_attributes=None,
+    node_attributes=None,
+    solar_species=None,
+    solar_node_attributes=None,
+    special_node_attributes=None,
+):
+
+    f = wf.compute_flows(net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath)
+
+    # Get the subset of nuclides to view in the graph.  Get anchors.
+
+    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+
+    return _create_flow_graph(
+        net,
+        f,
+        time,
+        t9,
+        rho,
+        subset_nuclides,
+        anchors,
+        allow_isolated_species,
+        reaction_color_tuples,
+        threshold,
+        scale,
+        title_func,
+        graph_attributes,
+        node_attributes,
+        edge_attributes,
+        solar_species,
+        solar_node_attributes,
+        special_node_attributes,
+    )
+
+
 def create_zone_flow_graphs(
     net,
     zones,
@@ -531,7 +571,6 @@ def create_zone_flow_graphs(
     induced_reac_xpath="",
     reaction_color_tuples=None,
     threshold=0.01,
-    node_shape="box",
     scale=10,
     allow_isolated_species=False,
     title_func=None,
@@ -545,35 +584,41 @@ def create_zone_flow_graphs(
 
     result = {}
 
+    f = wf.compute_flows_for_zones(net, zones, reac_xpath=induced_reac_xpath)
+
+    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+
     # Loop on zones
 
-    for zone in zones:
+    for zone in f:
+        props = zones[zone]["properties"]
+        s_time  = "time"
         s_t9 = "t9"
         s_rho = "rho"
-        s_time = "time"
-        props = zones[zone]["properties"]
-        if s_t9 in props and s_rho in props and s_time in props:
-            result[zone] = create_flow_graph(
-                net,
-                float(props[s_t9]),
-                float(props[s_rho]),
-                zones[zone]["mass fractions"],
-                time=float(props[s_time]),
-                induced_nuc_xpath=induced_nuc_xpath,
-                induced_reac_xpath=induced_reac_xpath,
-                reaction_color_tuples=reaction_color_tuples,
-                threshold=threshold,
-                node_shape=node_shape,
-                scale=scale,
-                allow_isolated_species=allow_isolated_species,
-                title_func=title_func,
-                graph_attributes=graph_attributes,
-                edge_attributes=edge_attributes,
-                node_attributes=node_attributes,
-                solar_species=solar_species,
-                solar_node_attributes=solar_node_attributes,
-                special_node_attributes=special_node_attributes,
-            )
+        if s_time in props:
+            time = float(props[s_time])
+        else:
+            time = None
+        result[zone] = _create_flow_graph(
+            net,
+            f[zone],
+            time,
+            float(props[s_t9]),
+            float(props[s_rho]),
+            subset_nuclides,
+            anchors,
+            allow_isolated_species,
+            reaction_color_tuples,
+            threshold,
+            scale,
+            title_func,
+            graph_attributes,
+            node_attributes,
+            edge_attributes,
+            solar_species,
+            solar_node_attributes,
+            special_node_attributes,
+        )
 
     return result
 
@@ -743,7 +788,6 @@ def create_links_flow_graph(
     for anchor in anchors:
         if anchor not in DG.nodes:
             DG.add_node(anchor, style="invis")
-
 
     # Get subset
 
