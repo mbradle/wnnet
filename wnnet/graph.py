@@ -422,6 +422,12 @@ def _create_flow_graph(
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
+    # Solar species
+
+    my_solar_species = solar_species
+    if not solar_species:
+        my_solar_species = get_solar_species()
+
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
@@ -456,7 +462,7 @@ def _create_flow_graph(
 
     _apply_edge_attributes(DG, edge_attributes)
 
-    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+    _apply_solar_node_attributes(DG, my_solar_species, solar_node_attributes)
 
     _apply_special_node_attributes(DG, special_node_attributes)
 
@@ -486,7 +492,7 @@ def _create_flow_graph(
     if not allow_isolated_species:
         isolated_nodes = list(nx.isolates(DG))
         for node in isolated_nodes:
-            if node not in solar_species:
+            if node not in my_solar_species:
                 DG.remove_node(node)
 
     # Restore anchors
@@ -540,12 +546,6 @@ def create_flow_graph(
 
     subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
 
-    # Solar species
-
-    my_solar_species = solar_species
-    if not solar_species:
-        my_solar_species = get_solar_species()
-
     # Title
 
     if not title_func:
@@ -566,7 +566,7 @@ def create_flow_graph(
         graph_attributes,
         node_attributes,
         edge_attributes,
-        my_solar_species,
+        solar_species,
         solar_node_attributes,
         special_node_attributes,
     )
@@ -595,12 +595,6 @@ def create_zone_flow_graphs(
     f = wf.compute_flows_for_zones(net, zones, reac_xpath=induced_reac_xpath)
 
     subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
-
-    # Solar species
-
-    my_solar_species = solar_species
-    if not solar_species:
-        my_solar_species = get_solar_species()
 
     # Loop on zones
 
@@ -636,7 +630,7 @@ def create_zone_flow_graphs(
             graph_attributes,
             node_attributes,
             edge_attributes,
-            my_solar_species,
+            solar_species,
             solar_node_attributes,
             special_node_attributes,
         )
