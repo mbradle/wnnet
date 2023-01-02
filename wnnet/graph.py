@@ -481,24 +481,28 @@ def create_flow_graph(
 
     w = nx.get_edge_attributes(S, "weight")
 
-    f_max = max(w.items(), key=operator.itemgetter(1))[1]
-
     # Set penwidth.  Remove edges that are below threshold
 
-    remove_edges = []
-    for edge in DG.edges:
-        penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
-        if penwidth > threshold:
-            DG.get_edge_data(*edge)["penwidth"] = penwidth
-        else:
-            remove_edges.append(edge)
+    if len(w) > 0:
+        f_max = max(w.items(), key=operator.itemgetter(1))[1]
 
-    DG.remove_edges_from(remove_edges)
+        remove_edges = []
+        for edge in DG.edges:
+            penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
+            if penwidth > threshold:
+                DG.get_edge_data(*edge)["penwidth"] = penwidth
+            else:
+                remove_edges.append(edge)
+
+        DG.remove_edges_from(remove_edges)
 
     # Remove isolated nodes if desired
 
     if not allow_isolated_species:
-        DG.remove_nodes_from(list(nx.isolates(DG)))
+        isolated_nodes = list(nx.isolates(DG))
+        for node in isolated_nodes:
+            if node not in solar_species:
+                DG.remove_node(node)
 
     # Restore anchors
 
