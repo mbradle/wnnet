@@ -297,21 +297,21 @@ def get_solar_species():
     ]
 
 
-def make_time_t9_rho_string(time, t9, rho):
+def make_time_t9_rho_flow_string(time, t9, rho, f_max):
     def fexp(f):
         # Add 0.01 for rounding for :.2f mantissa formating
-        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0.0
+        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
 
     def fman(f):
         return f / 10.0 ** fexp(f)
 
     if time:
-        return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
-            fman(time), fexp(time), t9, fman(rho), fexp(rho)
+        return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
+            fman(time), fexp(time), t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
         )
     else:
-        return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
-            t9, fman(rho), fexp(rho)
+        return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
+            t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
         )
 
 
@@ -450,10 +450,6 @@ def _create_flow_graph(
                         product, reactant, weight=tup[1], reaction=r, arrowsize=0.2
                     )
 
-    # Title
-
-    DG.graph["label"] = title_func
-
     # Apply attributes
 
     _apply_graph_attributes(DG, graph_attributes)
@@ -473,6 +469,8 @@ def _create_flow_graph(
     w = nx.get_edge_attributes(S, "weight")
 
     # Set penwidth.  Remove edges that are below threshold
+
+    f_max = 0
 
     if len(w) > 0:
         f_max = max(w.items(), key=operator.itemgetter(1))[1]
@@ -514,6 +512,10 @@ def _create_flow_graph(
         S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
         S2.nodes[node]["label"] = g_names[node]
 
+    # Title
+
+    DG.graph["label"] = title_func(f_max)
+
     _color_edges(S2, net, reaction_color_tuples)
 
     return S2
@@ -549,7 +551,7 @@ def create_flow_graph(
     # Title
 
     if not title_func:
-        my_title_func = make_time_t9_rho_string(time, t9, rho)
+        my_title_func = lambda f_max: make_time_t9_rho_flow_string(time, t9, rho, f_max)
     else:
         my_title_func = title_func
 
@@ -613,7 +615,9 @@ def create_zone_flow_graphs(
         if not title_func:
             t9 = float(props[s_t9])
             rho = float(props[s_rho])
-            my_title_func = make_time_t9_rho_string(time, t9, rho)
+            my_title_func = lambda f_max: make_time_t9_rho_flow_string(
+                time, t9, rho, f_max
+            )
         else:
             my_title_func = title_func
 
