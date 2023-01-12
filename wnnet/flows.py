@@ -4,6 +4,39 @@ import wnutils.xml as wx
 import numpy as np
 
 
+def _compute_flows_for_valid_reactions(
+    net, t9, rho, mass_fractions, reactions, valid_reactions, dups
+):
+
+    result = {}
+
+    print(t9, rho)
+
+    for reaction in valid_reactions:
+        my_reaction = reactions[reaction]
+
+        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
+
+        forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
+        forward /= dups[reaction][0]
+        forward *= _compute_abundance_product(
+            net, mass_fractions, my_reaction.nuclide_reactants
+        )
+
+        if not net.is_weak_reaction(reaction):
+            reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
+            reverse /= dups[reaction][1]
+            reverse *= _compute_abundance_product(
+                net, mass_fractions, my_reaction.nuclide_products
+            )
+        else:
+            reverse = 0
+
+        result[reaction] = (forward, reverse)
+
+    return result
+
+
 def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
     """A routine to compute flows for a given set of mass fractions at the input temperature and density.
 
@@ -31,40 +64,15 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
 
     """
 
-    nuclides = net.get_nuclides()
-    reactions = net.get_reactions()
-
-    valid_reactions = net.get_valid_reactions(
-        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+    return _compute_flows_for_valid_reactions(
+        net,
+        t9,
+        rho,
+        mass_fractions,
+        net.get_reactions(),
+        net.get_valid_reactions(nuc_xpath=nuc_xpath, reac_xpath=reac_xpath),
+        net.compute_duplicate_factors(),
     )
-
-    dups = net.compute_duplicate_factors()
-
-    f = {}
-
-    for reaction in valid_reactions:
-        my_reaction = reactions[reaction]
-
-        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
-
-        forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
-        forward /= dups[reaction][0]
-        forward *= _compute_abundance_product(
-            net, mass_fractions, my_reaction.nuclide_reactants
-        )
-
-        if not net.is_weak_reaction(reaction):
-            reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
-            reverse /= dups[reaction][1]
-            reverse *= _compute_abundance_product(
-                net, mass_fractions, my_reaction.nuclide_products
-            )
-        else:
-            reverse = 0
-
-        f[reaction] = (forward, reverse)
-
-    return f
 
 
 def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
@@ -91,6 +99,14 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
     """
 
+    reactions = net.get_reactions()
+
+    valid_reactions = net.get_valid_reactions(
+        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+    )
+
+    dups = net.compute_duplicate_factors()
+
     zone_flows = {}
 
     for zone in zones:
@@ -98,16 +114,15 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
         s_rho = "rho"
         props = zones[zone]["properties"]
         if s_t9 in props and s_rho in props:
-            f = compute_flows(
+            zone_flows[zone] = _compute_flows_for_valid_reactions(
                 net,
                 float(props[s_t9]),
                 float(props[s_rho]),
                 zones[zone]["mass fractions"],
-                nuc_xpath=nuc_xpath,
-                reac_xpath=reac_xpath,
+                reactions,
+                valid_reactions,
+                dups,
             )
-
-            zone_flows[zone] = f
 
     return zone_flows
 

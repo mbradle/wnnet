@@ -297,21 +297,21 @@ def get_solar_species():
     ]
 
 
-def make_time_t9_rho_string(time, t9, rho):
+def make_time_t9_rho_flow_string(time, t9, rho, f_max):
     def fexp(f):
         # Add 0.01 for rounding for :.2f mantissa formating
-        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0.0
+        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
 
     def fman(f):
         return f / 10.0 ** fexp(f)
 
     if time:
-        return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
-            fman(time), fexp(time), t9, fman(rho), fexp(rho)
+        return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
+            fman(time), fexp(time), t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
         )
     else:
-        return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc)>".format(
-            t9, fman(rho), fexp(rho)
+        return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
+            t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
         )
 
 
@@ -343,13 +343,13 @@ def _get_subset_and_anchors(net, induced_nuc_xpath):
             z_dict[nuclides[sp]["z"]].append(nuclides[sp]["a"])
 
     z_array = []
-    
+
     for z in z_dict:
         z_array.append(z)
         z_dict[z].sort()
 
     z_array.sort()
-        
+
     anchors = []
     anchors.append(dict[(z_array[0], z_dict[z_array[0]][0])])
     anchors.append(dict[(z_array[0], z_dict[z_array[0]][-1])])
@@ -401,38 +401,32 @@ def _apply_special_node_attributes(G, special_node_attributes):
                 G.nodes[node][key] = special_node_attributes[node][key]
 
 
-def create_flow_graph(
+def _create_flow_graph(
     net,
-    t9,
-    rho,
-    mass_fractions,
-    time=None,
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    reaction_color_tuples=None,
-    threshold=0.01,
-    node_shape="box",
-    scale=10,
-    allow_isolated_species=False,
-    title_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
+    f,
+    subset_nuclides,
+    anchors,
+    allow_isolated_species,
+    reaction_color_tuples,
+    threshold,
+    scale,
+    title_func,
+    graph_attributes,
+    node_attributes,
+    edge_attributes,
+    solar_species,
+    solar_node_attributes,
+    special_node_attributes,
 ):
-
-    result = {}
 
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    f = wf.compute_flows(net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath)
+    # Solar species
 
-    # Get the subset of nuclides to view in the graph.  Get anchors.
-
-    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    my_solar_species = solar_species
+    if not solar_species:
+        my_solar_species = get_solar_species()
 
     # Solar species
 
@@ -443,7 +437,7 @@ def create_flow_graph(
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape=node_shape)
+        DG.add_node(nuc, shape="box")
 
     for r in f:
         tup = f[r]
@@ -462,13 +456,6 @@ def create_flow_graph(
                         product, reactant, weight=tup[1], reaction=r, arrowsize=0.2
                     )
 
-    # Title
-
-    if title_func:
-        DG.graph["label"] = title_func()
-    else:
-        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
-
     # Apply attributes
 
     _apply_graph_attributes(DG, graph_attributes)
@@ -483,11 +470,13 @@ def create_flow_graph(
 
     # Subgraph and maximum flow within subgraph
 
-    S = nx.subgraph(DG, val)
+    S = nx.subgraph(DG, subset_nuclides)
 
     w = nx.get_edge_attributes(S, "weight")
 
     # Set penwidth.  Remove edges that are below threshold
+
+    f_max = 0
 
     if len(w) > 0:
         f_max = max(w.items(), key=operator.itemgetter(1))[1]
@@ -518,7 +507,7 @@ def create_flow_graph(
 
     # Get new subset
 
-    S2 = nx.subgraph(DG, val)
+    S2 = nx.subgraph(DG, subset_nuclides)
 
     g_names = net.xml.get_graphviz_names(list(S2.nodes.keys()))
 
@@ -529,9 +518,66 @@ def create_flow_graph(
         S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
         S2.nodes[node]["label"] = g_names[node]
 
+    # Title
+
+    DG.graph["label"] = title_func(f_max)
+
     _color_edges(S2, net, reaction_color_tuples)
 
     return S2
+
+
+def create_flow_graph(
+    net,
+    t9,
+    rho,
+    mass_fractions,
+    time=None,
+    induced_nuc_xpath="",
+    induced_reac_xpath="",
+    reaction_color_tuples=None,
+    threshold=0.01,
+    scale=10,
+    allow_isolated_species=False,
+    title_func=None,
+    graph_attributes=None,
+    edge_attributes=None,
+    node_attributes=None,
+    solar_species=None,
+    solar_node_attributes=None,
+    special_node_attributes=None,
+):
+
+    f = wf.compute_flows(net, t9, rho, mass_fractions, reac_xpath=induced_reac_xpath)
+
+    # Get the subset of nuclides to view in the graph.  Get anchors.
+
+    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+
+    # Title
+
+    if not title_func:
+        my_title_func = lambda f_max: make_time_t9_rho_flow_string(time, t9, rho, f_max)
+    else:
+        my_title_func = title_func
+
+    return _create_flow_graph(
+        net,
+        f,
+        subset_nuclides,
+        anchors,
+        allow_isolated_species,
+        reaction_color_tuples,
+        threshold,
+        scale,
+        my_title_func,
+        graph_attributes,
+        node_attributes,
+        edge_attributes,
+        solar_species,
+        solar_node_attributes,
+        special_node_attributes,
+    )
 
 
 def create_zone_flow_graphs(
@@ -541,7 +587,6 @@ def create_zone_flow_graphs(
     induced_reac_xpath="",
     reaction_color_tuples=None,
     threshold=0.01,
-    node_shape="box",
     scale=10,
     allow_isolated_species=False,
     title_func=None,
@@ -555,35 +600,50 @@ def create_zone_flow_graphs(
 
     result = {}
 
+    f = wf.compute_flows_for_zones(net, zones, reac_xpath=induced_reac_xpath)
+
+    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+
     # Loop on zones
 
-    for zone in zones:
+    for zone in f:
+        props = zones[zone]["properties"]
+        s_time = "time"
         s_t9 = "t9"
         s_rho = "rho"
-        s_time = "time"
-        props = zones[zone]["properties"]
-        if s_t9 in props and s_rho in props and s_time in props:
-            result[zone] = create_flow_graph(
-                net,
-                float(props[s_t9]),
-                float(props[s_rho]),
-                zones[zone]["mass fractions"],
-                time=float(props[s_time]),
-                induced_nuc_xpath=induced_nuc_xpath,
-                induced_reac_xpath=induced_reac_xpath,
-                reaction_color_tuples=reaction_color_tuples,
-                threshold=threshold,
-                node_shape=node_shape,
-                scale=scale,
-                allow_isolated_species=allow_isolated_species,
-                title_func=title_func,
-                graph_attributes=graph_attributes,
-                edge_attributes=edge_attributes,
-                node_attributes=node_attributes,
-                solar_species=solar_species,
-                solar_node_attributes=solar_node_attributes,
-                special_node_attributes=special_node_attributes,
+
+        time = None
+        if s_time in props:
+            time = float(props[s_time])
+
+        # Title
+
+        if not title_func:
+            t9 = float(props[s_t9])
+            rho = float(props[s_rho])
+            my_title_func = lambda f_max: make_time_t9_rho_flow_string(
+                time, t9, rho, f_max
             )
+        else:
+            my_title_func = title_func
+
+        result[zone] = _create_flow_graph(
+            net,
+            f[zone],
+            subset_nuclides,
+            anchors,
+            allow_isolated_species,
+            reaction_color_tuples,
+            threshold,
+            scale,
+            my_title_func,
+            graph_attributes,
+            node_attributes,
+            edge_attributes,
+            solar_species,
+            solar_node_attributes,
+            special_node_attributes,
+        )
 
     return result
 
@@ -726,10 +786,7 @@ def create_links_flow_graph(
 
     # Title
 
-    if title_func:
-        DG.graph["label"] = title_func()
-    else:
-        DG.graph["label"] = make_time_t9_rho_string(time, t9, rho)
+    DG.graph["label"] = title_func()
 
     # Apply attributes
 
@@ -753,7 +810,6 @@ def create_links_flow_graph(
     for anchor in anchors:
         if anchor not in DG.nodes:
             DG.add_node(anchor, style="invis")
-
 
     # Get subset
 
