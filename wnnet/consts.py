@@ -1,4 +1,5 @@
-from gsl_consts.consts import *
+import numpy as np
+from gslconsts.consts import *
 
 # Conversions for use with the package.
 
