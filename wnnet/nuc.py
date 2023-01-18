@@ -18,7 +18,8 @@ class Nuc:
 
     def __init__(self, file, nuc_xpath=""):
         self.xml = wx.Xml(file)
-        self.nuclides = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        self.nuclides = {}
+        self.nuclides[""] = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
 
     def get_nuclides(self, nuc_xpath=""):
         """Method to return a collection of nuclides.
@@ -31,10 +32,9 @@ class Nuc:
 
         """
 
-        if not nuc_xpath:
-            return self.nuclides
-        else:
-            return self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        if nuc_xpath not in self.nuclides:
+            self.nuclides[nuc_xpath] = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        return self.nuclides[nuc_xpath]
 
     def compute_nuclear_partition_function(self, name, t9):
         """Method to compute the nuclear partition function for a species.

@@ -5,15 +5,21 @@ import numpy as np
 
 
 def _compute_flows_for_valid_reactions(
-    net, t9, rho, mass_fractions, reactions, valid_reactions, dups
+    net, t9, rho, mass_fractions, nuc_xpath, reac_xpath
 ):
 
     result = {}
 
     print(t9, rho)
 
+    dups = net.compute_duplicate_factors()
+
+    valid_reactions = net.get_valid_reactions(
+        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+    )
+
     for reaction in valid_reactions:
-        my_reaction = reactions[reaction]
+        my_reaction = valid_reactions[reaction]
 
         forward, reverse = net.compute_rates_for_reaction(reaction, t9)
 
@@ -65,13 +71,7 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
     """
 
     return _compute_flows_for_valid_reactions(
-        net,
-        t9,
-        rho,
-        mass_fractions,
-        net.get_reactions(),
-        net.get_valid_reactions(nuc_xpath=nuc_xpath, reac_xpath=reac_xpath),
-        net.compute_duplicate_factors(),
+        net, t9, rho, mass_fractions, nuc_xpath, reac_xpath
     )
 
 
@@ -99,14 +99,6 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
     """
 
-    reactions = net.get_reactions()
-
-    valid_reactions = net.get_valid_reactions(
-        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
-    )
-
-    dups = net.compute_duplicate_factors()
-
     zone_flows = {}
 
     for zone in zones:
@@ -119,9 +111,8 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
                 float(props[s_t9]),
                 float(props[s_rho]),
                 zones[zone]["mass fractions"],
-                reactions,
-                valid_reactions,
-                dups,
+                nuc_xpath,
+                reac_xpath,
             )
 
     return zone_flows
@@ -169,11 +160,15 @@ def compute_link_flows(
 
     """
 
-    assert direction == "forward" or direction == "reverse" or direction == "both"
+    assert (
+        direction == "forward"
+        or direction == "reverse"
+        or direction == "both"
+        or direction == "all"
+    )
     assert order == "normal" or order == "reversed"
 
     nuclides = net.get_nuclides()
-    reactions = net.get_reactions()
 
     valid_reactions = net.get_valid_reactions(
         nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
@@ -185,14 +180,14 @@ def compute_link_flows(
 
     for reaction in valid_reactions:
         tup_array = []
-        my_reaction = reactions[reaction]
+        my_reaction = valid_reactions[reaction]
 
         reactants = my_reaction.nuclide_reactants
         products = my_reaction.nuclide_products
 
         forward, reverse = net.compute_rates_for_reaction(reaction, t9)
 
-        if direction == "forward" or direction == "both":
+        if direction == "forward" or direction == "both" or direction == "all":
             forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
             forward /= dups[reaction][0]
 
@@ -208,8 +203,16 @@ def compute_link_flows(
                         tup = (target, source, forward * p_source)
                     tup_array.append(tup)
 
+                if direction == "all":
+                    for target in reactants:
+                        if order == "normal":
+                            tup = (source, target, -forward * p_source)
+                        else:
+                            tup = (target, source, -forward * p_source)
+                        tup_array.append(tup)
+
         if not net.is_weak_reaction(reaction):
-            if direction == "reverse" or direction == "both":
+            if direction == "reverse" or direction == "both" or direction == "all":
                 reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
                 reverse /= dups[reaction][1]
 
@@ -224,6 +227,14 @@ def compute_link_flows(
                         else:
                             tup = (target, source, reverse * p_source)
                         tup_array.append(tup)
+
+                    if direction == "all":
+                        for target in products:
+                            if order == "normal":
+                                tup = (source, target, -reverse * p_source)
+                            else:
+                                tup = (target, source, -reverse * p_source)
+                            tup_array.append(tup)
 
         link_flows[reaction] = tup_array
 
