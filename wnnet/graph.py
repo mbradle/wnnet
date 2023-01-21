@@ -315,6 +315,14 @@ def make_time_t9_rho_flow_string(time, t9, rho, f_max):
         )
 
 
+def make_node_label(g_names, name):
+    return g_names[name]
+
+
+def make_zone_node_label(g_names, name, zone):
+    return make_node_label(g_names, name)
+
+
 def _color_edges(G, net, color_tuples):
     color = {}
     for reaction in net.get_reactions():
@@ -411,6 +419,7 @@ def _create_flow_graph(
     threshold,
     scale,
     title_func,
+    node_label_func,
     graph_attributes,
     node_attributes,
     edge_attributes,
@@ -437,7 +446,7 @@ def _create_flow_graph(
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape="box")
+        DG.add_node(nuc, shape="box", fontsize=16)
 
     for r in f:
         tup = f[r]
@@ -516,7 +525,7 @@ def _create_flow_graph(
         z = nuc["z"]
         n = nuc["a"] - z
         S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S2.nodes[node]["label"] = g_names[node]
+        S2.nodes[node]["label"] = node_label_func(g_names, node)
 
     # Title
 
@@ -540,6 +549,7 @@ def create_flow_graph(
     scale=10,
     allow_isolated_species=False,
     title_func=None,
+    node_label_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -561,6 +571,13 @@ def create_flow_graph(
     else:
         my_title_func = title_func
 
+    # Node label
+
+    if not node_label_func:
+        my_node_label_func = lambda gnames, name: make_node_label(gnames, name)
+    else:
+        my_node_label_func = node_label_func
+
     return _create_flow_graph(
         net,
         f,
@@ -571,6 +588,7 @@ def create_flow_graph(
         threshold,
         scale,
         my_title_func,
+        my_node_label_func,
         graph_attributes,
         node_attributes,
         edge_attributes,
@@ -590,6 +608,7 @@ def create_zone_flow_graphs(
     scale=10,
     allow_isolated_species=False,
     title_func=None,
+    zone_node_label_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -627,6 +646,17 @@ def create_zone_flow_graphs(
         else:
             my_title_func = title_func
 
+        # Node label
+
+        if not zone_node_label_func:
+            my_zone_node_label_func = lambda gnames, name: make_zone_node_label(
+                gnames, name, zones[zone]
+            )
+        else:
+            my_zone_node_label_func = zone_node_label_func
+
+        # Create graph
+
         result[zone] = _create_flow_graph(
             net,
             f[zone],
@@ -637,6 +667,7 @@ def create_zone_flow_graphs(
             threshold,
             scale,
             my_title_func,
+            my_zone_node_label_func,
             graph_attributes,
             node_attributes,
             edge_attributes,
@@ -661,6 +692,7 @@ def create_network_graph(
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
+    node_label_func=None,
     solar_species=None,
     solar_node_attributes=None,
     special_node_attributes=None,
@@ -724,12 +756,19 @@ def create_network_graph(
 
     g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
 
+    # Node label
+
+    if node_label_func:
+        my_node_label_func = node_label_func
+    else:
+        my_node_label_func = lambda gnames, name: make_node_label(gnames, name)
+
     for node in S.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
         n = nuc["a"] - z
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S.nodes[node]["label"] = g_names[node]
+        S2.nodes[node]["label"] = my_node_label_func(g_names, node)
 
     _color_edges(S, net, reaction_color_tuples)
 
@@ -822,7 +861,7 @@ def create_links_flow_graph(
         z = nuc["z"]
         n = nuc["a"] - z
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S.nodes[node]["label"] = g_names[node]
+        S2.nodes[node]["label"] = make_node_label(g_names, node)
 
     _color_edges(S, net, reaction_color_tuples)
 

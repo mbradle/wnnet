@@ -23,7 +23,7 @@ class Net(wn.Nuc, wr.Reac):
         wn.Nuc.__init__(self, file, nuc_xpath=nuc_xpath)
         wr.Reac.__init__(self, file, reac_xpath=reac_xpath)
         self.valid_reactions = {}
-        self.valid_reaction[("", "")] = self.get_valid_reactions(
+        self.valid_reactions[("", "")] = self.get_valid_reactions(
             nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
         )
 
