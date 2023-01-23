@@ -153,6 +153,9 @@ class Net(wn.Nuc, wr.Reac):
         reaction = self.get_reactions()[name]
         forward = reaction.compute_rate(t9)
 
+        if self.is_weak_reaction(name):
+            return (forward, 0)
+
         d_exp = 0
 
         for sp in reaction.nuclide_reactants:

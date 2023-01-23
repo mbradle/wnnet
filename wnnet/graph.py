@@ -520,6 +520,8 @@ def _create_flow_graph(
 
     g_names = net.xml.get_graphviz_names(list(S2.nodes.keys()))
 
+    print(node_label_func)
+
     for node in S2.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
@@ -786,7 +788,6 @@ def create_links_flow_graph(
     direction="both",
     reaction_color_tuples=None,
     threshold=0.01,
-    node_shape="box",
     scale=10,
     allow_isolated_species=False,
     title_func=None,
@@ -814,7 +815,7 @@ def create_links_flow_graph(
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape=node_shape)
+        DG.add_node(nuc, shape="box", fontsize=16)
 
     for r in f:
         tups = f[r]
