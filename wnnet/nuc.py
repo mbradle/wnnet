@@ -53,7 +53,12 @@ class Nuc:
         """
 
         nuclide = self.get_nuclides()[name]
+
         t = nuclide["t9"]
+
+        if len(t) == 0:
+            return (2. * nuclide["spin"] + 1)
+
         lg = np.log10(nuclide["partf"])
 
         if t9 < t[0]:

@@ -518,16 +518,14 @@ def _create_flow_graph(
 
     S2 = nx.subgraph(DG, subset_nuclides)
 
-    g_names = net.xml.get_graphviz_names(list(S2.nodes.keys()))
-
-    print(node_label_func)
-
+    g_names = net.xml.get_graphviz_names(subset_nuclides)
     for node in S2.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
         n = nuc["a"] - z
         S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S2.nodes[node]["label"] = node_label_func(g_names, node)
+        #S2.nodes[node]["label"] = node_label_func(node)
+        S2.nodes[node]["label"] = g_names[node]
 
     # Title
 
@@ -576,7 +574,8 @@ def create_flow_graph(
     # Node label
 
     if not node_label_func:
-        my_node_label_func = lambda gnames, name: make_node_label(gnames, name)
+        g_names = net.xml.get_graphviz_names(subset_nuclides)
+        my_node_label_func = lambda name: make_node_label(g_names, name)
     else:
         my_node_label_func = node_label_func
 
@@ -650,9 +649,10 @@ def create_zone_flow_graphs(
 
         # Node label
 
+        g_names = net.xml.get_graphviz_names(subset_nuclides)
         if not zone_node_label_func:
-            my_zone_node_label_func = lambda gnames, name: make_zone_node_label(
-                gnames, name, zones[zone]
+            my_zone_node_label_func = lambda name: make_zone_node_label(
+                g_names, name, zones[zone]
             )
         else:
             my_zone_node_label_func = zone_node_label_func
@@ -688,7 +688,6 @@ def create_network_graph(
     direction="both",
     reaction_color_tuples=None,
     threshold=0.01,
-    node_shape="box",
     scale=10,
     allow_isolated_species=False,
     graph_attributes=None,
@@ -714,7 +713,7 @@ def create_network_graph(
     DG = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape=node_shape)
+        DG.add_node(nuc, shape="box", fontsize=16)
 
     for r in reactions:
         if direction == "forward" or direction == "both":
@@ -756,21 +755,20 @@ def create_network_graph(
 
     S = nx.subgraph(DG, val)
 
-    g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
-
     # Node label
 
     if node_label_func:
         my_node_label_func = node_label_func
     else:
-        my_node_label_func = lambda gnames, name: make_node_label(gnames, name)
+        g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
+        my_node_label_func = lambda name: make_node_label(g_names, name)
 
     for node in S.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
         n = nuc["a"] - z
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S2.nodes[node]["label"] = my_node_label_func(g_names, node)
+        S.nodes[node]["label"] = my_node_label_func(node)
 
     _color_edges(S, net, reaction_color_tuples)
 
@@ -855,14 +853,12 @@ def create_links_flow_graph(
 
     S = nx.subgraph(DG, val)
 
-    g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
-
     for node in S.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
         n = nuc["a"] - z
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S2.nodes[node]["label"] = make_node_label(g_names, node)
+        S.nodes[node]["label"] = make_node_label(node)
 
     _color_edges(S, net, reaction_color_tuples)
 
