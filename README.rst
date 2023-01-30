@@ -1,4 +1,4 @@
-IMPORTANT: wnnet is not yet released.  Target date for release is Jan. 16, 2023.
+IMPORTANT: wnnet is not yet released.  Target date for release is Feb. 3, 2023.
 
 Overview
 ========

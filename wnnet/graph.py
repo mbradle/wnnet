@@ -7,6 +7,14 @@ import wnnet.flows as wf
 
 
 def get_solar_species():
+    """A method to return the naturally-occurring solar-system species.
+
+    Returns:
+        A :obj:`list`.  A list containing :obj:`str` of the names
+        of the naturally-occurring solar-system species.
+
+    """
+
     return [
         "h1",
         "h2",

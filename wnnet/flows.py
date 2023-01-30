@@ -49,9 +49,9 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
     Args:
         ``net``: A wnnet network.
 
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at whidh to compute the flows.
+        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the flows.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at whidh to compute the flows.
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the flows.
 
         ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
 
@@ -133,9 +133,9 @@ def compute_link_flows(
     Args:
         ``net``: A wnnet network.
 
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at whidh to compute the flows.
+        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the flows.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at whidh to compute the flows.
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the flows.
 
         ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
 

@@ -79,7 +79,7 @@ class Nuc:
         Args:
             `name` (:obj:`str`): The name of the species.
 
-            `t9` (:obj:`float`): The temperature in 10\ ::sup`9` K at which to compute the quantum abundance.
+            `t9` (:obj:`float`): The temperature in 10\ :sup:`9` K at which to compute the quantum abundance.
 
             `rho` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
 
