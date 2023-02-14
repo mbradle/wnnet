@@ -300,14 +300,13 @@ def compute_link_flows_for_zones(
         s_rho = "rho"
         s_dt = "dt"
         props = zones[zone]["properties"]
-        x = zones[zone]["mass fractions"]
         f = {}
         if s_t9 in props and s_rho in props:
             f = compute_link_flows(
                 net,
-                t9,
-                rho,
-                mass_fractions,
+                float(props[s_t9]),
+                float(props[s_rho]),
+                zones[zone]["mass fractions"],
                 nuc_xpath=nuc_xpath,
                 reac_xpath=reac_xpath,
                 direction=direction,
@@ -315,8 +314,11 @@ def compute_link_flows_for_zones(
             )
 
             if include_dt:
-                f[0] *= float(props[s_dt])
-                f[1] *= float(props[s_dt])
+                for r in f:
+                    for i in range(len(f[r])):
+                        t = f[r][i]
+                        t_new = (t[0], t[1], t[2] * float(props[s_dt]))
+                        f[r][i] = t_new
 
             zone_link_flows[zone] = f
 
