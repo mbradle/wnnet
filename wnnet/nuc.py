@@ -77,11 +77,11 @@ class Nuc:
         """Method to compute the quantum abundance of the nuclide at the input temperature and density.
 
         Args:
-            `name` (:obj:`str`): The name of the species.
+            ``name`` (:obj:`str`): The name of the species.
 
-            `t9` (:obj:`float`): The temperature in 10\ :sup:`9` K at which to compute the quantum abundance.
+            ``t9`` (:obj:`float`): The temperature in 10\ :sup:`9` K at which to compute the quantum abundance.
 
-            `rho` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
+            ``rho`` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
 
         Returns:
             A :obj:`float` giving the quantum abundance for the species at the input conditions.
@@ -108,7 +108,7 @@ class Nuc:
         """Method to compute the nuclear binding energy of a species.
 
         Args:
-            `name` (:obj:`str`): The name of the species.
+            ``name`` (:obj:`str`): The name of the species.
 
         Returns:
             A :obj:`float` containing the binding energy in MeV.

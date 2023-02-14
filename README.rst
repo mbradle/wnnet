@@ -40,4 +40,4 @@ Usage
 -----
 
 The best way to get started using wnnet is to follow the
-`tutorials <http://wnnet.readthedocs.io/en/latest/tutorials.html>`_.
+`tutorial <https://github.com/mengkel/wnnet_tutorial>`_.

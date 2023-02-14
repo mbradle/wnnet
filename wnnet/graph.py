@@ -797,6 +797,7 @@ def create_links_flow_graph(
     scale=10,
     allow_isolated_species=False,
     title_func=None,
+    node_label_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -832,7 +833,8 @@ def create_links_flow_graph(
 
     # Title
 
-    DG.graph["label"] = title_func()
+    if title_func:
+        DG.graph["label"] = title_func()
 
     # Apply attributes
 
@@ -861,12 +863,20 @@ def create_links_flow_graph(
 
     S = nx.subgraph(DG, val)
 
+    # Node label
+
+    if node_label_func:
+        my_node_label_func = node_label_func
+    else:
+        g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
+        my_node_label_func = lambda name: make_node_label(g_names, name)
+
     for node in S.nodes:
         nuc = nuclides[node]
         z = nuc["z"]
         n = nuc["a"] - z
         S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        S.nodes[node]["label"] = make_node_label(node)
+        S.nodes[node]["label"] = my_node_label_func(node)
 
     _color_edges(S, net, reaction_color_tuples)
 
