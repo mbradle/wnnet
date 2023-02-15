@@ -57,7 +57,7 @@ class Nuc:
         t = nuclide["t9"]
 
         if len(t) == 0:
-            return (2. * nuclide["spin"] + 1)
+            return 2.0 * nuclide["spin"] + 1
 
         lg = np.log10(nuclide["partf"])
 

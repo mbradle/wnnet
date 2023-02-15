@@ -532,7 +532,7 @@ def _create_flow_graph(
         z = nuc["z"]
         n = nuc["a"] - z
         S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
-        #S2.nodes[node]["label"] = node_label_func(node)
+        # S2.nodes[node]["label"] = node_label_func(node)
         S2.nodes[node]["label"] = g_names[node]
 
     # Title

@@ -2,7 +2,7 @@
 also includes all constants from
 `gslconsts <https://gslconsts.readthedocs.io/en/latest/gslconsts.html#module-gslconsts.consts>`_.
 """
- 
+
 import numpy as np
 from gslconsts.consts import *
 
