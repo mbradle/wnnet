@@ -305,13 +305,18 @@ def get_solar_species():
     ]
 
 
-def _make_time_t9_rho_flow_string(time, t9, rho, f_max):
+def _make_time_t9_rho_flow_string(zone, f_max):
     def fexp(f):
         # Add 0.01 for rounding for :.2f mantissa formating
         return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
 
     def fman(f):
         return f / 10.0 ** fexp(f)
+
+    props = zone["properties"]
+    time = float(props["time"])
+    t9 = float(props["t9"])
+    rho = float(props["rho"])
 
     return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
         fman(time), fexp(time), t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
@@ -623,15 +628,7 @@ def create_flow_graph(
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
-        ``title_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies the title to the graph.  The function \
-            must take two arguments, two :obj:`floats` giving the t9 and rho \
-            at which the flows are computed.  Other data can be bound \
-            to the function.  The function must return a :obj:`str` \
-            giving the title.  The default is a title giving the \
-            the temperature in billions of Kelvins and the \
-            mass density in grams / cc.
+        ``title_func`` (optional): A `function <https://docs.python.org/3/library/stdtypes.html#functions>`_ that applies the title to the graph.  The function must take one :obj:`float` argument giving the maximum flow. Other data can be bound to the function.  The function must return a :obj:`str` giving the title.  The default is a title giving the the temperature in billions of Kelvins, the mass density in grams / cc, and the maximum flow.
         
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -717,6 +714,57 @@ def create_zone_flow_graphs(
     solar_node_attributes=None,
     special_node_attributes=None,
 ):
+    """A routine to create flow graphs for a set of zones.
+
+    Args:
+        ``net``: A wnnet network. 
+
+        ``zones``: A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of zones.
+
+        ``flow_type`` (:obj:`str`, optional): A string giving the flow type to be presented.  The possible values are `net`, which shows the forward minus the reverse flow (or the opposite if the reverse flow is larger), and `full`, which shows both the foward and reverse flows.
+
+        ``induced_nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of nuclides in the graph.  The default is all species in the network.
+
+        ``induced_reac_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of reactions in the graph.  The default is all reactions in the network.
+
+        ``reaction_color_tuples`` (:obj:`tuple`, optional): A tuple to select arc colors for reaction types.  The first member of the tuple is an XPath expression to select the reaction type while the second member is a string giving the color for that reaction type.  The default is that all arcs are black.
+
+        ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
+        
+        ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
+        
+        ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
+
+        ``title_func`` (optional): A `function \
+             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+             that applies the title to the graph.  The function must take one \
+             :obj:`float` argument giving the maximum flow.  Other data can \
+             be bound to the function.  The function must return a :obj:`str` \
+             giving the title.  The default is a title giving the the time, \
+             the temperature in billions of Kelvins, the mass density in \
+             grams / cc, and the maximum flow.
+        
+        ``zone_node_label_func`` (optional): A `function \
+            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+            that applies label to each node in the graph.  The function \
+            must take as argument a species name.  Other data can be bound to \
+            the function.  The function must return a :obj:`str` \
+            giving the label.  The default is a title giving the \
+            node label as a graphviz string.
+        
+        ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
+
+        ``edge_attributes`` (:obj:`dict`, optional):  A dictionary of grapvhiz attributes for the edges in the graph.
+
+        ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
+
+        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the Solar System's actual naturally occurring species.
+
+        ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
+
+        ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    """
 
     result = {}
 
@@ -727,22 +775,12 @@ def create_zone_flow_graphs(
     # Loop on zones
 
     for zone in f:
-        props = zones[zone]["properties"]
-        s_time = "time"
-        s_t9 = "t9"
-        s_rho = "rho"
-
-        time = None
-        if s_time in props:
-            time = float(props[s_time])
 
         # Title
 
         if not title_func:
-            t9 = float(props[s_t9])
-            rho = float(props[s_rho])
             my_title_func = lambda f_max: _make_time_t9_rho_flow_string(
-                time, t9, rho, f_max
+                zones[zone], f_max
             )
         else:
             my_title_func = title_func
@@ -921,7 +959,6 @@ def create_links_flow_graph(
     t9,
     rho,
     mass_fractions,
-    time=None,
     induced_nuc_xpath="",
     induced_reac_xpath="",
     direction="both",
