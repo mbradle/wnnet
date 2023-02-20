@@ -10,8 +10,6 @@ def _compute_flows_for_valid_reactions(
 
     result = {}
 
-    print(t9, rho)
-
     for reaction in valid_reactions:
         my_reaction = valid_reactions[reaction]
 
