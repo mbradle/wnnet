@@ -304,7 +304,6 @@ def get_solar_species():
         "u238",
     ]
 
-
 def make_time_t9_rho_flow_string(zone, zone_label, f_max):
     """The default title function for zone flow graphs.
 
@@ -426,7 +425,6 @@ def make_zone_node_label(zone, zone_label, name, g_names):
 
     """
     return make_node_label(name, g_names)
-
 
 def scale_edge_weight(edge_data, f_max, scale, threshold):
     """The default edge weight scale function.
@@ -746,15 +744,15 @@ def create_flow_graph(
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
-        ``title_func`` (optional): A `function <https://docs.python.org/3/library/stdtypes.html#functions>`_ that applies the title to the graph.  The function must take one :obj:`float` argument giving the maximum flow. Other data can be bound to the function.  The function must return a :obj:`str` giving the title.  The default is a title giving the the temperature in billions of Kelvins, the mass density in grams / cc, and the maximum flow.
+        ``title_func`` (optional): A `function <https://docs.python.org/3/library/stdtypes.html#functions>`_ that applies the title to the graph.  The function must take one :obj:`float` argument giving the maximum flow. Other data can be bound to the function.  The function must return a :obj:`str` giving the title.  The default is :meth:`wnnet.graph.make_t9_rho_flow_string`.
         
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
             that applies label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
-            giving the label.  The default is a title giving the \
-            node label as a graphviz string.
+            giving the label.  \
+            The default is :meth:`wnnet.graph.make_node_label`.
         
         ``scale_edge_weight_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -765,10 +763,10 @@ def create_flow_graph(
             and a threshold for not including the edge in the graph \
             (input as *threshold* to this routine). \
             Other data can be bound to \
-            the function.  The function must modify the weight in the
-            edge data and return a :obj:`bool` indicating whether to include
+            the function.  The function must modify the weight in the \
+            edge data and return a :obj:`bool` indicating whether to include \
             the edge in the graph (True) or not (False).\
-            The default is a linear scaling.
+            The default is :meth:`wnnet.graph.scale_edge_weight`.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -776,7 +774,7 @@ def create_flow_graph(
 
         ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
 
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the Solar System's actual naturally occurring species.
+        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
 
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
@@ -876,9 +874,8 @@ def create_zone_flow_graphs(
              the graph while the second is the zone label and the third is \
              a :obj:`float` giving the maximum flow. Other data can \
              be bound to the function.  The function must return a :obj:`str` \
-             giving the title.  The default is a title giving the the time, \
-             the temperature in billions of Kelvins, the mass density in \
-             grams / cc, and the maximum flow.
+             giving the title.  \
+             The default is :meth:`wnnet.graph.make_time_t9_rho_flow_string.`.
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -886,8 +883,8 @@ def create_zone_flow_graphs(
             must take as arguments a zone, the zone label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
-            giving the label.  The default is a title giving the \
-            node label as a graphviz string.
+            giving the label.  The default is \
+            :meth:`wnnet.graph.make_zone_node_label`.
         
         ``scale_edge_weight_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -898,10 +895,10 @@ def create_zone_flow_graphs(
             and a threshold for not including the edge in the graph \
             (input as *threshold* to this routine). \
             Other data can be bound to \
-            the function.  The function must modify the weight in the
-            edge data and return a :obj:`bool` indicating whether to include
+            the function.  The function must modify the weight in the \
+            edge data and return a :obj:`bool` indicating whether to include \
             the edge in the graph (True) or not (False).\
-            The default is a linear scaling.
+            The default is :meth:`wnnet.graph.scale_edge_weight`.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -909,7 +906,7 @@ def create_zone_flow_graphs(
 
         ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
 
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the Solar System's actual naturally occurring species.
+        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
 
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
@@ -1015,8 +1012,8 @@ def create_network_graph(
             that applies label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
-            giving the label.  The default is a title giving the \
-            node label as a graphviz string.
+            giving the label.  The default is \
+            :meth:`wnnet.graph.make_node_label`.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -1024,7 +1021,7 @@ def create_network_graph(
 
         ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
 
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the Solar System's actual naturally occurring species.
+        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
 
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
@@ -1297,9 +1294,8 @@ def create_zone_integrated_current_graphs(
              and the third is a :obj:`float` giving the maximum \
              integrated current.  Other data can \
              be bound to the function.  The function must return a :obj:`str` \
-             giving the title.  The default is a title giving the the time, \
-             the temperature in billions of Kelvins, the mass density in \
-             grams / cc, and the maximum integrated current.
+             giving the title.  The default is \
+             :meth:`wnnet.graph.make_time_t9_rho_current_string`.
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -1307,8 +1303,8 @@ def create_zone_integrated_current_graphs(
             must take three arguments: a zone, its label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
-            giving the label.  The default is a title giving the \
-            node label as a graphviz string.
+            giving the label.  The default is \
+            :meth:`wnnet.graph.make_zone_node_label`.
         
         ``scale_edge_weight_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
@@ -1319,10 +1315,10 @@ def create_zone_integrated_current_graphs(
             and a threshold for not including the edge in the graph \
             (input as *threshold* to this routine). \
             Other data can be bound to \
-            the function.  The function must modify the weight in the
-            edge data and return a :obj:`bool` indicating whether to include
+            the function.  The function must modify the weight in the \
+            edge data and return a :obj:`bool` indicating whether to include \
             the edge in the graph (True) or not (False).\
-            The default is a linear scaling.
+            The default is :meth:`wnnet.graph.scale_edge_weight`.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
