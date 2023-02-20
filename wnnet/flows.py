@@ -4,46 +4,14 @@ import wnutils.xml as wx
 import numpy as np
 
 
-def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
-    """A routine to compute flows for a given set of mass fractions at the input temperature and density.
+def _compute_flows_for_valid_reactions(
+    net, t9, rho, mass_fractions, valid_reactions, dups, nuc_xpath, reac_xpath
+):
 
-    Args:
-        ``net``: A wnnet network.
-
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at whidh to compute the flows.
-
-        ``rho`` (:obj:`float`):  The density in g/cc at whidh to compute the flows.
-
-        ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
-
-        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
-        to select nuclides for flow computations.  Defaults to all
-        species.
-
-        ``reac_xpath`` (:obj:`str`, optional): XPath expression
-        to select reactions for flow computations.  Defaults to all
-        reactions.
-
-    Returns:
-        A :obj:`dict` of reactions with each
-        item in the dictionary a tuple giving the forward and
-        reverse flow.
-
-    """
-
-    nuclides = net.get_nuclides()
-    reactions = net.get_reactions()
-
-    valid_reactions = net.get_valid_reactions(
-        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
-    )
-
-    dups = net.compute_duplicate_factors()
-
-    f = {}
+    result = {}
 
     for reaction in valid_reactions:
-        my_reaction = reactions[reaction]
+        my_reaction = valid_reactions[reaction]
 
         forward, reverse = net.compute_rates_for_reaction(reaction, t9)
 
@@ -62,9 +30,47 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
         else:
             reverse = 0
 
-        f[reaction] = (forward, reverse)
+        result[reaction] = (forward, reverse)
 
-    return f
+    return result
+
+
+def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
+    """A routine to compute flows for a given set of mass fractions at the input temperature and density.
+
+    Args:
+        ``net``: A wnnet network.
+
+        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the flows.
+
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the flows.
+
+        ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
+
+        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
+        to select nuclides for flow computations.  Defaults to all
+        species.
+
+        ``reac_xpath`` (:obj:`str`, optional): XPath expression
+        to select reactions for flow computations.  Defaults to all
+        reactions.
+
+    Returns:
+        A :obj:`dict` of reactions with each
+        item in the dictionary a tuple giving the forward and
+        reverse flow.
+
+    """
+
+    valid_reactions = net.get_valid_reactions(
+        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+    )
+
+    dups = net.compute_duplicate_factors()
+
+    return _compute_flows_for_valid_reactions(
+        net, t9, rho, mass_fractions, valid_reactions, dups, nuc_xpath, reac_xpath
+    )
 
 
 def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
@@ -93,23 +99,109 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
 
     zone_flows = {}
 
+    valid_reactions = net.get_valid_reactions(
+        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+    )
+
+    dups = net.compute_duplicate_factors()
+
     for zone in zones:
         s_t9 = "t9"
         s_rho = "rho"
         props = zones[zone]["properties"]
         if s_t9 in props and s_rho in props:
-            f = compute_flows(
+            zone_flows[zone] = _compute_flows_for_valid_reactions(
                 net,
                 float(props[s_t9]),
                 float(props[s_rho]),
                 zones[zone]["mass fractions"],
-                nuc_xpath=nuc_xpath,
-                reac_xpath=reac_xpath,
+                valid_reactions,
+                dups,
+                nuc_xpath,
+                reac_xpath,
             )
 
-            zone_flows[zone] = f
-
     return zone_flows
+
+
+def _compute_link_flows_for_valid_reactions(
+    net,
+    t9,
+    rho,
+    mass_fractions,
+    valid_reactions,
+    dups,
+    scale,
+    nuc_xpath,
+    reac_xpath,
+    direction,
+    order,
+):
+    nuclides = net.get_nuclides()
+
+    link_flows = {}
+
+    for reaction in valid_reactions:
+        tup_array = []
+        my_reaction = valid_reactions[reaction]
+
+        reactants = my_reaction.nuclide_reactants
+        products = my_reaction.nuclide_products
+
+        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
+
+        if direction == "forward" or direction == "both" or direction == "all":
+            forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
+            forward /= dups[reaction][0]
+
+            for i in range(len(reactants)):
+                source = reactants[i]
+                p_source = _compute_abundance_product(
+                    net, mass_fractions, reactants, exclude_index=i
+                )
+                for target in products:
+                    if order == "normal":
+                        tup = (source, target, forward * p_source * scale)
+                    else:
+                        tup = (target, source, forward * p_source * scale)
+                    tup_array.append(tup)
+
+                if direction == "all":
+                    for target in reactants:
+                        if order == "normal":
+                            tup = (source, target, -forward * p_source * scale)
+                        else:
+                            tup = (target, source, -forward * p_source * scale)
+                        tup_array.append(tup)
+
+        if not net.is_weak_reaction(reaction):
+            if direction == "reverse" or direction == "both" or direction == "all":
+                reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
+                reverse /= dups[reaction][1]
+
+                for i in range(len(products)):
+                    source = products[i]
+                    p_source = _compute_abundance_product(
+                        net, mass_fractions, products, exclude_index=i
+                    )
+                    for target in reactants:
+                        if order == "normal":
+                            tup = (source, target, reverse * p_source * scale)
+                        else:
+                            tup = (target, source, reverse * p_source * scale)
+                        tup_array.append(tup)
+
+                    if direction == "all":
+                        for target in products:
+                            if order == "normal":
+                                tup = (source, target, -reverse * p_source * scale)
+                            else:
+                                tup = (target, source, -reverse * p_source * scale)
+                            tup_array.append(tup)
+
+        link_flows[reaction] = tup_array
+
+    return link_flows
 
 
 def compute_link_flows(
@@ -127,9 +219,9 @@ def compute_link_flows(
     Args:
         ``net``: A wnnet network.
 
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at whidh to compute the flows.
+        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the flows.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at whidh to compute the flows.
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the flows.
 
         ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
 
@@ -154,11 +246,13 @@ def compute_link_flows(
 
     """
 
-    assert direction == "forward" or direction == "reverse" or direction == "both"
+    assert (
+        direction == "forward"
+        or direction == "reverse"
+        or direction == "both"
+        or direction == "all"
+    )
     assert order == "normal" or order == "reversed"
-
-    nuclides = net.get_nuclides()
-    reactions = net.get_reactions()
 
     valid_reactions = net.get_valid_reactions(
         nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
@@ -166,53 +260,21 @@ def compute_link_flows(
 
     dups = net.compute_duplicate_factors()
 
-    link_flows = {}
+    scale = 1
 
-    for reaction in valid_reactions:
-        tup_array = []
-        my_reaction = reactions[reaction]
-
-        reactants = my_reaction.nuclide_reactants
-        products = my_reaction.nuclide_products
-
-        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
-
-        if direction == "forward" or direction == "both":
-            forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
-            forward /= dups[reaction][0]
-
-            for i in range(len(reactants)):
-                source = reactants[i]
-                p_source = _compute_abundance_product(
-                    net, mass_fractions, reactants, exclude_index=i
-                )
-                for target in products:
-                    if order == "normal":
-                        tup = (source, target, forward * p_source)
-                    else:
-                        tup = (target, source, forward * p_source)
-                    tup_array.append(tup)
-
-        if not net.is_weak_reaction(reaction):
-            if direction == "reverse" or direction == "both":
-                reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
-                reverse /= dups[reaction][1]
-
-                for i in range(len(products)):
-                    source = products[i]
-                    p_source = _compute_abundance_product(
-                        net, mass_fractions, products, exclude_index=i
-                    )
-                    for target in reactants:
-                        if order == "normal":
-                            tup = (source, target, reverse * p_source)
-                        else:
-                            tup = (target, source, reverse * p_source)
-                        tup_array.append(tup)
-
-        link_flows[reaction] = tup_array
-
-    return link_flows
+    return _compute_link_flows_for_valid_reactions(
+        net,
+        t9,
+        rho,
+        mass_fractions,
+        valid_reactions,
+        dups,
+        scale,
+        nuc_xpath,
+        reac_xpath,
+        direction,
+        order,
+    )
 
 
 def compute_link_flows_for_zones(
@@ -261,6 +323,10 @@ def compute_link_flows_for_zones(
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
+    s_t9 = "t9"
+    s_rho = "rho"
+    s_dt = "dt"
+
     valid_reactions = net.get_valid_reactions(
         nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
     )
@@ -270,27 +336,26 @@ def compute_link_flows_for_zones(
     zone_link_flows = {}
 
     for zone in zones:
-        s_t9 = "t9"
-        s_rho = "rho"
-        s_dt = "dt"
         props = zones[zone]["properties"]
-        x = zones[zone]["mass fractions"]
         f = {}
         if s_t9 in props and s_rho in props:
-            f = compute_link_flows(
-                net,
-                t9,
-                rho,
-                mass_fractions,
-                nuc_xpath=nuc_xpath,
-                reac_xpath=reac_xpath,
-                direction=direction,
-                order=order,
-            )
-
             if include_dt:
-                f[0] *= float(props[s_dt])
-                f[1] *= float(props[s_dt])
+                scale = float(props[s_dt])
+            else:
+                scale = 1
+            f = _compute_link_flows_for_valid_reactions(
+                net,
+                float(props[s_t9]),
+                float(props[s_rho]),
+                zones[zone]["mass fractions"],
+                valid_reactions,
+                dups,
+                scale,
+                nuc_xpath,
+                reac_xpath,
+                direction,
+                order,
+            )
 
             zone_link_flows[zone] = f
 

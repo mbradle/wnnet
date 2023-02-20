@@ -18,7 +18,8 @@ class Nuc:
 
     def __init__(self, file, nuc_xpath=""):
         self.xml = wx.Xml(file)
-        self.nuclides = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        self.nuclides = {}
+        self.nuclides[""] = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
 
     def get_nuclides(self, nuc_xpath=""):
         """Method to return a collection of nuclides.
@@ -31,10 +32,9 @@ class Nuc:
 
         """
 
-        if not nuc_xpath:
-            return self.nuclides
-        else:
-            return self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        if nuc_xpath not in self.nuclides:
+            self.nuclides[nuc_xpath] = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+        return self.nuclides[nuc_xpath]
 
     def compute_nuclear_partition_function(self, name, t9):
         """Method to compute the nuclear partition function for a species.
@@ -53,7 +53,12 @@ class Nuc:
         """
 
         nuclide = self.get_nuclides()[name]
+
         t = nuclide["t9"]
+
+        if len(t) == 0:
+            return 2.0 * nuclide["spin"] + 1
+
         lg = np.log10(nuclide["partf"])
 
         if t9 < t[0]:
@@ -72,11 +77,11 @@ class Nuc:
         """Method to compute the quantum abundance of the nuclide at the input temperature and density.
 
         Args:
-            `name` (:obj:`str`): The name of the species.
+            ``name`` (:obj:`str`): The name of the species.
 
-            `t9` (:obj:`float`): The temperature in 10\ ::sup`9` K at which to compute the quantum abundance.
+            ``t9`` (:obj:`float`): The temperature in 10\ :sup:`9` K at which to compute the quantum abundance.
 
-            `rho` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
+            ``rho`` (:obj:`float`): The density in g/cc  at which to compute the quantum abundance.
 
         Returns:
             A :obj:`float` giving the quantum abundance for the species at the input conditions.
@@ -103,7 +108,7 @@ class Nuc:
         """Method to compute the nuclear binding energy of a species.
 
         Args:
-            `name` (:obj:`str`): The name of the species.
+            ``name`` (:obj:`str`): The name of the species.
 
         Returns:
             A :obj:`float` containing the binding energy in MeV.

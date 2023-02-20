@@ -17,7 +17,8 @@ class Reac:
 
     def __init__(self, file, reac_xpath=""):
         self.xml = wx.Xml(file)
-        self.reactions = self.xml.get_reaction_data(reac_xpath=reac_xpath)
+        self.reactions = {}
+        self.reactions[reac_xpath] = self.xml.get_reaction_data(reac_xpath=reac_xpath)
 
     def get_reactions(self, reac_xpath=""):
         """Method to return a collection of reactions.
@@ -30,10 +31,11 @@ class Reac:
 
         """
 
-        if not reac_xpath:
-            return self.reactions
-        else:
-            return self.xml.get_reaction_data(reac_xpath=reac_xpath)
+        if reac_xpath not in self.reactions:
+            self.reactions[reac_xpath] = self.xml.get_reaction_data(
+                reac_xpath=reac_xpath
+            )
+        return self.reactions[reac_xpath]
 
     def _compute_duplicate_factor(self, elements):
         dict = {}
