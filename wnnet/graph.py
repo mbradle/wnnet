@@ -446,9 +446,9 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
     """
 
     keep_edge = True
-    penwidth = scale * edge_data["weight"] / f_max
-    if penwidth > threshold:
-        edge_data["penwidth"] = penwidth
+    r = edge_data["weight"] / f_max
+    if r >= threshold:
+        edge_data["penwidth"] = scale * r
     else:
         keep_edge = False
     return keep_edge
@@ -1132,6 +1132,7 @@ def _create_integrated_current_graph(
     reaction_color_tuples,
     threshold,
     scale,
+    state_scaling,
     allow_isolated_species,
     title_func,
     zone_node_label_func,
