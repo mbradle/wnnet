@@ -22,6 +22,14 @@ wnnet.flows module
    :undoc-members:
    :show-inheritance:
 
+wnnet.graph module
+------------------
+
+.. automodule:: wnnet.graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 wnnet.net module
 ----------------
 
