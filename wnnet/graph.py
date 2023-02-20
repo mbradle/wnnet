@@ -761,7 +761,7 @@ def create_flow_graph(
         
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
             giving the label.  \
@@ -896,7 +896,7 @@ def create_zone_flow_graphs(
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as arguments a zone, the zone label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
@@ -1030,7 +1030,7 @@ def create_network_graph(
 
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
             giving the label.  The default is \
@@ -1317,7 +1317,7 @@ def create_zone_integrated_current_graphs(
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take three arguments: a zone, its label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
