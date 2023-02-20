@@ -38,4 +38,4 @@ Usage
 -----
 
 The best way to get started using wnnet is to follow the
-`tutorial <https://github.com/mengkel/wnnet_tutorial>`_.
+`tutorial <https://github.com/mbradle/wnnet/tutorial>`_.
