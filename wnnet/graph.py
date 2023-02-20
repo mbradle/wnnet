@@ -304,6 +304,7 @@ def get_solar_species():
         "u238",
     ]
 
+
 def make_time_t9_rho_flow_string(zone, zone_label, f_max):
     """The default title function for zone flow graphs.
 
@@ -426,6 +427,7 @@ def make_zone_node_label(zone, zone_label, name, g_names):
     """
     return make_node_label(name, g_names)
 
+
 def scale_edge_weight(edge_data, f_max, scale, threshold):
     """The default edge weight scale function.
 
@@ -464,6 +466,16 @@ def _color_edges(G, net, color_tuples):
 
         for edge in G.edges:
             G.edges[edge]["color"] = color[G.edges[edge]["reaction"]]
+
+
+def _get_pos_string(net, name, state_scaling):
+    z, a, state = net.xml.get_z_a_state_from_nuclide_name(name)
+    n = a - z
+    if state == "g":
+        z -= state_scaling
+    elif state == "m":
+        z += state_scaling
+    return str(n) + "," + str(z) + "!"
 
 
 def _get_subset_and_anchors(net, induced_nuc_xpath):
@@ -548,6 +560,7 @@ def _create_flow_graph(
     reaction_color_tuples,
     threshold,
     scale,
+    state_scaling,
     title_func,
     node_label_func,
     scale_edge_weight_func,
@@ -682,10 +695,7 @@ def _create_flow_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S2.nodes[node]["label"] = node_label_func(node)
 
     # Title
@@ -708,6 +718,7 @@ def create_flow_graph(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     node_label_func=None,
@@ -741,6 +752,8 @@ def create_flow_graph(
         ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
+        
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
@@ -814,6 +827,7 @@ def create_flow_graph(
         reaction_color_tuples,
         threshold,
         scale,
+        state_scaling,
         my_title_func,
         my_node_label_func,
         scale_edge_weight_func,
@@ -835,6 +849,7 @@ def create_zone_flow_graphs(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
@@ -864,6 +879,8 @@ def create_zone_flow_graphs(
         ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
+        
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
@@ -957,6 +974,7 @@ def create_zone_flow_graphs(
             reaction_color_tuples,
             threshold,
             scale,
+            state_scaling,
             my_title_func,
             my_zone_node_label_func,
             scale_edge_weight_func,
@@ -979,6 +997,7 @@ def create_network_graph(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     node_label_func=None,
     graph_attributes=None,
@@ -1004,6 +1023,8 @@ def create_network_graph(
         ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
+        
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
@@ -1094,10 +1115,7 @@ def create_network_graph(
         my_node_label_func = lambda name: make_node_label(name, g_names)
 
     for node in S.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S.nodes[node]["label"] = my_node_label_func(node)
 
     _color_edges(S, net, reaction_color_tuples)
@@ -1232,10 +1250,7 @@ def _create_integrated_current_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S2.nodes[node]["label"] = zone_node_label_func(node)
 
     DG.graph["label"] = title_func(f_max)
@@ -1254,6 +1269,7 @@ def create_zone_integrated_current_graphs(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
@@ -1283,6 +1299,8 @@ def create_zone_integrated_current_graphs(
         ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
+        
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
         
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
@@ -1370,6 +1388,7 @@ def create_zone_integrated_current_graphs(
             reaction_color_tuples,
             threshold,
             scale,
+            state_scaling,
             allow_isolated_species,
             my_title_func,
             my_zone_node_label_func,
