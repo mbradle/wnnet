@@ -428,6 +428,32 @@ def make_zone_node_label(zone, zone_label, name, g_names):
     return make_node_label(name, g_names)
 
 
+def scale_edge_weight(edge_data, f_max, scale, threshold):
+    """The default edge weight scale function.
+
+    Args:
+        ``edge_data``:  A dictionary of edge properties.
+
+        ``f_max`` (:obj:`float`):  The maximum edge weight.
+
+        ``scale`` (:obj:`float`):  The factor by which to scale the weight.
+
+        ``threshold`` (:obj:`float`):  The threshold for not including the edge.
+
+    Returns:
+        A :obj:`bool` indicating whether to include the edge (True) or not (False).
+
+    """
+
+    keep_edge = True
+    penwidth = scale * edge_data["weight"] / f_max
+    if penwidth > threshold:
+        edge_data["penwidth"] = penwidth
+    else:
+        keep_edge = False
+    return keep_edge
+
+
 def _color_edges(G, net, color_tuples):
     color = {}
     for reaction in net.get_reactions():
@@ -526,6 +552,7 @@ def _create_flow_graph(
     scale,
     title_func,
     node_label_func,
+    scale_edge_weight_func,
     graph_attributes,
     node_attributes,
     edge_attributes,
@@ -622,12 +649,18 @@ def _create_flow_graph(
     if len(w) > 0:
         f_max = max(w.items(), key=operator.itemgetter(1))[1]
 
+        if not scale_edge_weight_func:
+            my_scale_edge_weight_func = lambda edge_data: scale_edge_weight(
+                edge_data, f_max, scale, threshold
+            )
+        else:
+            my_scale_edge_weight_func = lambda edge_data: scale_edge_weight_func(
+                edge_data, f_max, scale, threshold
+            )
+
         remove_edges = []
         for edge in DG.edges:
-            penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
-            if penwidth > threshold:
-                DG.get_edge_data(*edge)["penwidth"] = penwidth
-            else:
+            if not my_scale_edge_weight_func(DG.get_edge_data(*edge)):
                 remove_edges.append(edge)
 
         DG.remove_edges_from(remove_edges)
@@ -680,6 +713,7 @@ def create_flow_graph(
     allow_isolated_species=False,
     title_func=None,
     node_label_func=None,
+    scale_edge_weight_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -721,6 +755,20 @@ def create_flow_graph(
             the function.  The function must return a :obj:`str` \
             giving the label.  The default is a title giving the \
             node label as a graphviz string.
+        
+        ``scale_edge_weight_func`` (optional): A `function \
+            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+            that applies scales each edge weight in the graph.  The function \
+            must take as four arguments: a dictionary of edge data, the \
+            maximum edge weight in the scope of the graph, a scale factor \
+            by which to scale the weight (input as *scale* to this routine), \
+            and a threshold for not including the edge in the graph \
+            (input as *threshold* to this routine). \
+            Other data can be bound to \
+            the function.  The function must modify the weight in the
+            edge data and return a :obj:`bool` indicating whether to include
+            the edge in the graph (True) or not (False).\
+            The default is a linear scaling.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -770,6 +818,7 @@ def create_flow_graph(
         scale,
         my_title_func,
         my_node_label_func,
+        scale_edge_weight_func,
         graph_attributes,
         node_attributes,
         edge_attributes,
@@ -791,6 +840,7 @@ def create_zone_flow_graphs(
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
+    scale_edge_weight_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -838,6 +888,20 @@ def create_zone_flow_graphs(
             the function.  The function must return a :obj:`str` \
             giving the label.  The default is a title giving the \
             node label as a graphviz string.
+        
+        ``scale_edge_weight_func`` (optional): A `function \
+            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+            that applies scales each edge weight in the graph.  The function \
+            must take as four arguments: a dictionary of edge data, the \
+            maximum edge weight in the scope of the graph, a scale factor \
+            by which to scale the weight (input as *scale* to this routine), \
+            and a threshold for not including the edge in the graph \
+            (input as *threshold* to this routine). \
+            Other data can be bound to \
+            the function.  The function must modify the weight in the
+            edge data and return a :obj:`bool` indicating whether to include
+            the edge in the graph (True) or not (False).\
+            The default is a linear scaling.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -898,6 +962,7 @@ def create_zone_flow_graphs(
             scale,
             my_title_func,
             my_zone_node_label_func,
+            scale_edge_weight_func,
             graph_attributes,
             node_attributes,
             edge_attributes,
@@ -1055,6 +1120,7 @@ def _create_integrated_current_graph(
     allow_isolated_species,
     title_func,
     zone_node_label_func,
+    scale_edge_weight_func,
     graph_attributes,
     edge_attributes,
     node_attributes,
@@ -1134,12 +1200,18 @@ def _create_integrated_current_graph(
     if len(w) > 0:
         f_max = max(w.items(), key=operator.itemgetter(1))[1]
 
+        if not scale_edge_weight_func:
+            my_scale_edge_weight_func = lambda edge_data: scale_edge_weight(
+                edge_data, f_max, scale, threshold
+            )
+        else:
+            my_scale_edge_weight_func = lambda edge_data: scale_edge_weight_func(
+                edge_data, f_max, scale, threshold
+            )
+
         remove_edges = []
         for edge in DG.edges:
-            penwidth = scale * DG.get_edge_data(*edge)["weight"] / f_max
-            if penwidth > threshold:
-                DG.get_edge_data(*edge)["penwidth"] = penwidth
-            else:
+            if not my_scale_edge_weight_func(DG.get_edge_data(*edge)):
                 remove_edges.append(edge)
 
         DG.remove_edges_from(remove_edges)
@@ -1188,6 +1260,7 @@ def create_zone_integrated_current_graphs(
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
+    scale_edge_weight_func=None,
     graph_attributes=None,
     edge_attributes=None,
     node_attributes=None,
@@ -1236,6 +1309,20 @@ def create_zone_integrated_current_graphs(
             the function.  The function must return a :obj:`str` \
             giving the label.  The default is a title giving the \
             node label as a graphviz string.
+        
+        ``scale_edge_weight_func`` (optional): A `function \
+            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+            that applies scales each edge weight in the graph.  The function \
+            must take as four arguments: a dictionary of edge data, the \
+            maximum edge weight in the scope of the graph, a scale factor \
+            by which to scale the weight (input as *scale* to this routine), \
+            and a threshold for not including the edge in the graph \
+            (input as *threshold* to this routine). \
+            Other data can be bound to \
+            the function.  The function must modify the weight in the
+            edge data and return a :obj:`bool` indicating whether to include
+            the edge in the graph (True) or not (False).\
+            The default is a linear scaling.
         
         ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
 
@@ -1290,6 +1377,7 @@ def create_zone_integrated_current_graphs(
             allow_isolated_species,
             my_title_func,
             my_zone_node_label_func,
+            scale_edge_weight_func,
             graph_attributes,
             edge_attributes,
             node_attributes,
