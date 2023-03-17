@@ -793,6 +793,9 @@ def create_flow_graph(
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
 
+    Returns:
+        A graph showing the nuclides and reaction in the network.
+
     """
     assert flow_type == "net" or flow_type == "full"
 
@@ -928,6 +931,9 @@ def create_zone_flow_graphs(
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    Returns:
+        A `:obj:dict` of flow graphs.  The keys are the zone labels.
 
     """
 
@@ -1350,6 +1356,9 @@ def create_zone_integrated_current_graphs(
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    Returns:
+        A `:obj:dict` of integrated current  graphs.  The keys are the zone labels.
 
     """
 
