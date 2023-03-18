@@ -304,6 +304,7 @@ def get_solar_species():
         "u238",
     ]
 
+
 def make_time_t9_rho_flow_string(zone, zone_label, f_max):
     """The default title function for zone flow graphs.
 
@@ -426,6 +427,7 @@ def make_zone_node_label(zone, zone_label, name, g_names):
     """
     return make_node_label(name, g_names)
 
+
 def scale_edge_weight(edge_data, f_max, scale, threshold):
     """The default edge weight scale function.
 
@@ -444,9 +446,9 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
     """
 
     keep_edge = True
-    penwidth = scale * edge_data["weight"] / f_max
-    if penwidth > threshold:
-        edge_data["penwidth"] = penwidth
+    r = edge_data["weight"] / f_max
+    if r >= threshold:
+        edge_data["penwidth"] = scale * r
     else:
         keep_edge = False
     return keep_edge
@@ -464,6 +466,16 @@ def _color_edges(G, net, color_tuples):
 
         for edge in G.edges:
             G.edges[edge]["color"] = color[G.edges[edge]["reaction"]]
+
+
+def _get_pos_string(net, name, state_scaling):
+    z, a, state = net.xml.get_z_a_state_from_nuclide_name(name)
+    n = a - z
+    if state == "g":
+        z -= state_scaling
+    elif state == "m":
+        z += state_scaling
+    return str(n) + "," + str(z) + "!"
 
 
 def _get_subset_and_anchors(net, induced_nuc_xpath):
@@ -548,6 +560,7 @@ def _create_flow_graph(
     reaction_color_tuples,
     threshold,
     scale,
+    state_scaling,
     title_func,
     node_label_func,
     scale_edge_weight_func,
@@ -682,10 +695,7 @@ def _create_flow_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S2.nodes[node]["label"] = node_label_func(node)
 
     # Title
@@ -708,6 +718,7 @@ def create_flow_graph(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     node_label_func=None,
@@ -742,13 +753,15 @@ def create_flow_graph(
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
         
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
+        
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
         ``title_func`` (optional): A `function <https://docs.python.org/3/library/stdtypes.html#functions>`_ that applies the title to the graph.  The function must take one :obj:`float` argument giving the maximum flow. Other data can be bound to the function.  The function must return a :obj:`str` giving the title.  The default is :meth:`wnnet.graph.make_t9_rho_flow_string`.
         
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
             giving the label.  \
@@ -779,6 +792,10 @@ def create_flow_graph(
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    Returns:
+        A `networkx multidigraph <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the flows.
+     
 
     """
     assert flow_type == "net" or flow_type == "full"
@@ -814,6 +831,7 @@ def create_flow_graph(
         reaction_color_tuples,
         threshold,
         scale,
+        state_scaling,
         my_title_func,
         my_node_label_func,
         scale_edge_weight_func,
@@ -835,6 +853,7 @@ def create_zone_flow_graphs(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
@@ -865,6 +884,8 @@ def create_zone_flow_graphs(
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
         
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
+        
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
         ``title_func`` (optional): A `function \
@@ -879,7 +900,7 @@ def create_zone_flow_graphs(
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as arguments a zone, the zone label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
@@ -911,6 +932,10 @@ def create_zone_flow_graphs(
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    Returns:
+        A :obj:`dict` of `networkx multidigraphs <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the flows.  The keys are the zone labels.
+     
 
     """
 
@@ -957,6 +982,7 @@ def create_zone_flow_graphs(
             reaction_color_tuples,
             threshold,
             scale,
+            state_scaling,
             my_title_func,
             my_zone_node_label_func,
             scale_edge_weight_func,
@@ -979,6 +1005,7 @@ def create_network_graph(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     node_label_func=None,
     graph_attributes=None,
@@ -1005,11 +1032,13 @@ def create_network_graph(
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
         
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
+        
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
         ``node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take as argument a species name.  Other data can be bound to \
             the function.  The function must return a :obj:`str` \
             giving the label.  The default is \
@@ -1027,6 +1056,9 @@ def create_network_graph(
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
 
+    Returns:
+        A `networkx multidigraph <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the network; that is, the nuclides and reactions among them.
+     
     """
 
     assert direction == "forward" or direction == "reverse" or direction == "both"
@@ -1094,10 +1126,7 @@ def create_network_graph(
         my_node_label_func = lambda name: make_node_label(name, g_names)
 
     for node in S.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S.nodes[node]["label"] = my_node_label_func(node)
 
     _color_edges(S, net, reaction_color_tuples)
@@ -1114,6 +1143,7 @@ def _create_integrated_current_graph(
     reaction_color_tuples,
     threshold,
     scale,
+    state_scaling,
     allow_isolated_species,
     title_func,
     zone_node_label_func,
@@ -1232,10 +1262,7 @@ def _create_integrated_current_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        nuc = nuclides[node]
-        z = nuc["z"]
-        n = nuc["a"] - z
-        S2.nodes[node]["pos"] = str(n) + "," + str(z) + "!"
+        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
         S2.nodes[node]["label"] = zone_node_label_func(node)
 
     DG.graph["label"] = title_func(f_max)
@@ -1254,6 +1281,7 @@ def create_zone_integrated_current_graphs(
     reaction_color_tuples=None,
     threshold=0.01,
     scale=10,
+    state_scaling=0.325,
     allow_isolated_species=False,
     title_func=None,
     zone_node_label_func=None,
@@ -1284,6 +1312,8 @@ def create_zone_integrated_current_graphs(
         
         ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
         
+        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
+        
         ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
 
         ``title_func`` (optional): A `function \
@@ -1299,7 +1329,7 @@ def create_zone_integrated_current_graphs(
         
         ``zone_node_label_func`` (optional): A `function \
             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies label to each node in the graph.  The function \
+            that applies a label to each node in the graph.  The function \
             must take three arguments: a zone, its label, and a species name. \
             Other data can be bound to \
             the function.  The function must return a :obj:`str` \
@@ -1331,6 +1361,9 @@ def create_zone_integrated_current_graphs(
         ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
 
         ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+
+    Returns:
+        A :obj:`dict` of `networkx multidigraphs <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the integrated currents.  The keys are the zone labels.
 
     """
 
@@ -1370,6 +1403,7 @@ def create_zone_integrated_current_graphs(
             reaction_color_tuples,
             threshold,
             scale,
+            state_scaling,
             allow_isolated_species,
             my_title_func,
             my_zone_node_label_func,
