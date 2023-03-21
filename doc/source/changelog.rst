@@ -9,7 +9,7 @@ Version 1.0.2
 
 Fix:
 
-  * Fix the tutorial notebook installation of graphviz and libgraphviz-dev.
+  * The tutorial notebook installation of graphviz and libgraphviz-dev has been     fixed.
   * Some tutorial text has been updated and corrected.
 
 Version 1.0.1
@@ -17,7 +17,7 @@ Version 1.0.1
 
 Fix:
 
-  * Fix the tutorial notebook installation of pygraphviz.
+  * The tutorial notebook installation of pygraphviz has been fixed.
 
 Version 1.0.0
 -------------
