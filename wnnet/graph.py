@@ -1199,7 +1199,7 @@ def _create_integrated_current_graph(
             for product in reactions[r].nuclide_products:
                 for reactant in reactions[r].nuclide_reactants:
                     DG.add_edge(
-                        product, reactant, weight=f[r], reaction=r, arrowsize=0.2
+                        product, reactant, weight=-f[r], reaction=r, arrowsize=0.2
                     )
 
     # Apply attributes
