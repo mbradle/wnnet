@@ -4,6 +4,17 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 1.0.4
+-------------
+
+New:
+
+  * The ability to add user-rate functions has been added to the API.
+
+Internal:
+
+  * An execution of black has been added to the build script.
+
 Version 1.0.3
 -------------
 

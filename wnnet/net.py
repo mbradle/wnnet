@@ -134,13 +134,15 @@ class Net(wn.Nuc, wr.Reac):
                 return False
         return True
 
-    def compute_rates_for_reaction(self, name, t9):
+    def compute_rates_for_reaction(self, name, t9, user_funcs=''):
         """Method to compute the forward and reverse rates for a valid reaction.
 
         Args:
             ``name`` (:obj:`str`):  A string giving the reaction.
 
             ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the rates.
+
+            ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined functions associated with a user_rate key.
 
         Returns:
             A two-element :obj:`tuple` with the first element being the forward rate and the second element being the reverse rate.  If the reaction is not valid, returns None.
@@ -151,7 +153,7 @@ class Net(wn.Nuc, wr.Reac):
             return None
 
         reaction = self.get_reactions()[name]
-        forward = reaction.compute_rate(t9)
+        forward = reaction.compute_rate(t9, user_funcs=user_funcs)
 
         if self.is_weak_reaction(name):
             return (forward, 0)
@@ -173,7 +175,7 @@ class Net(wn.Nuc, wr.Reac):
 
         return (forward, np.exp(d_exp) * (tup[1] / tup[0]) * forward)
 
-    def compute_rates(self, t9, nuc_xpath="", reac_xpath=""):
+    def compute_rates(self, t9, nuc_xpath="", reac_xpath="", user_funcs=''):
         """Method to compute the forward and reverse rates for valid reactions in a network.
 
         Args:
@@ -183,6 +185,7 @@ class Net(wn.Nuc, wr.Reac):
 
             ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select reactions.  Default is all reactions.
 
+            ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined functions associated with a user_rate key.
 
         Returns:
             A :obj:`dict` containing the rates.  The key is the reaction string while the value is a two-element  :obj:`tuple` with the first element being the forward rate and the second element being the reverse rate.
@@ -196,6 +199,6 @@ class Net(wn.Nuc, wr.Reac):
         result = {}
 
         for r in v_reactions:
-            result[r] = self.compute_rates_for_reaction(r, t9)
+            result[r] = self.compute_rates_for_reaction(r, t9, user_funcs=user_funcs)
 
         return result
