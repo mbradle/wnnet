@@ -5,27 +5,37 @@ import numpy as np
 
 
 def _compute_flows_for_valid_reactions(
-    net, t9, rho, mass_fractions, valid_reactions, dups, nuc_xpath, reac_xpath
+    net,
+    t9,
+    rho,
+    mass_fractions,
+    valid_reactions,
+    dups,
+    nuc_xpath,
+    reac_xpath,
+    user_funcs,
 ):
 
     result = {}
 
     for reaction in valid_reactions:
-        my_reaction = valid_reactions[reaction]
+        _reaction = valid_reactions[reaction]
 
-        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
+        forward, reverse = net.compute_rates_for_reaction(
+            reaction, t9, user_funcs=user_funcs
+        )
 
-        forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
+        forward *= np.power(rho, len(_reaction.nuclide_reactants) - 1)
         forward /= dups[reaction][0]
         forward *= _compute_abundance_product(
-            net, mass_fractions, my_reaction.nuclide_reactants
+            net, mass_fractions, _reaction.nuclide_reactants
         )
 
         if not net.is_weak_reaction(reaction):
-            reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
+            reverse *= np.power(rho, len(_reaction.nuclide_products) - 1)
             reverse /= dups[reaction][1]
             reverse *= _compute_abundance_product(
-                net, mass_fractions, my_reaction.nuclide_products
+                net, mass_fractions, _reaction.nuclide_products
             )
         else:
             reverse = 0
@@ -35,7 +45,9 @@ def _compute_flows_for_valid_reactions(
     return result
 
 
-def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
+def compute_flows(
+    net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath="", user_funcs=""
+):
     """A routine to compute flows for a given set of mass fractions at the input temperature and density.
 
     Args:
@@ -55,6 +67,14 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
         to select reactions for flow computations.  Defaults to all
         reactions.
 
+        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
+        functions associated with a user_rate key.
+        The prototype for each
+        user rate function should be (*reaction*, *t9*), where
+        *t9* is the temperature in billions of Kelvin and *reaction*
+        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
+        instance.  Other data can be bound to the function.
+
     Returns:
         A :obj:`dict` of reactions with each
         item in the dictionary a tuple giving the forward and
@@ -69,11 +89,19 @@ def compute_flows(net, t9, rho, mass_fractions, nuc_xpath="", reac_xpath=""):
     dups = net.compute_duplicate_factors()
 
     return _compute_flows_for_valid_reactions(
-        net, t9, rho, mass_fractions, valid_reactions, dups, nuc_xpath, reac_xpath
+        net,
+        t9,
+        rho,
+        mass_fractions,
+        valid_reactions,
+        dups,
+        nuc_xpath,
+        reac_xpath,
+        user_funcs,
     )
 
 
-def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
+def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath="", user_funcs=""):
     """A routine to compute flows for a set of zones.
 
     Args:
@@ -88,6 +116,15 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
         ``reac_xpath`` (:obj:`str`, optional): XPath expression
         to select reactions for flow computations.  Defaults to all
         reactions.
+
+        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
+        functions associated with a user_rate key.
+        The prototype for each
+        user rate function should be (*reaction*, *t9*, *zone*), where
+        *t9* is the temperature in billions of Kelvin and *reaction* and
+        *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and
+        zone instances.  Other data can be bound to the function.
+
 
     Returns:
         A :obj:`dict` of flows for each zone.  The data for
@@ -108,17 +145,27 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath=""):
     for zone in zones:
         s_t9 = "t9"
         s_rho = "rho"
-        props = zones[zone]["properties"]
+        _zone = zones[zone]
+        props = _zone["properties"]
         if s_t9 in props and s_rho in props:
+            t9 = float(props[s_t9])
+            rho = float(props[s_rho])
+            _user_funcs = {}
+            if user_funcs:
+                for func in user_funcs:
+                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
+                        func
+                    ](reaction, t9, _zone)
             zone_flows[zone] = _compute_flows_for_valid_reactions(
                 net,
-                float(props[s_t9]),
-                float(props[s_rho]),
-                zones[zone]["mass fractions"],
+                t9,
+                rho,
+                _zone["mass fractions"],
                 valid_reactions,
                 dups,
                 nuc_xpath,
                 reac_xpath,
+                _user_funcs,
             )
 
     return zone_flows
@@ -134,6 +181,7 @@ def _compute_link_flows_for_valid_reactions(
     scale,
     nuc_xpath,
     reac_xpath,
+    user_funcs,
     direction,
     order,
 ):
@@ -143,15 +191,17 @@ def _compute_link_flows_for_valid_reactions(
 
     for reaction in valid_reactions:
         tup_array = []
-        my_reaction = valid_reactions[reaction]
+        _reaction = valid_reactions[reaction]
 
-        reactants = my_reaction.nuclide_reactants
-        products = my_reaction.nuclide_products
+        reactants = _reaction.nuclide_reactants
+        products = _reaction.nuclide_products
 
-        forward, reverse = net.compute_rates_for_reaction(reaction, t9)
+        forward, reverse = net.compute_rates_for_reaction(
+            reaction, t9, user_funcs=user_funcs
+        )
 
         if direction == "forward" or direction == "both" or direction == "all":
-            forward *= np.power(rho, len(my_reaction.nuclide_reactants) - 1)
+            forward *= np.power(rho, len(_reaction.nuclide_reactants) - 1)
             forward /= dups[reaction][0]
 
             for i in range(len(reactants)):
@@ -176,7 +226,7 @@ def _compute_link_flows_for_valid_reactions(
 
         if not net.is_weak_reaction(reaction):
             if direction == "reverse" or direction == "both" or direction == "all":
-                reverse *= np.power(rho, len(my_reaction.nuclide_products) - 1)
+                reverse *= np.power(rho, len(_reaction.nuclide_products) - 1)
                 reverse /= dups[reaction][1]
 
                 for i in range(len(products)):
@@ -211,6 +261,7 @@ def compute_link_flows(
     mass_fractions,
     nuc_xpath="",
     reac_xpath="",
+    user_funcs="",
     direction="both",
     order="normal",
 ):
@@ -232,6 +283,14 @@ def compute_link_flows(
         ``reac_xpath`` (:obj:`str`, optional): XPath expression
         to select reactions for flow computations.  Defaults to all
         reactions.
+
+        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
+        functions associated with a user_rate key.
+        The prototype for each
+        user rate function should be (*reaction*, *t9*), where
+        *t9* is the temperature in billions of Kelvin and *reaction*
+        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
+        instance.  Other data can be bound to the function.
 
         ``direction`` (:obj:`str`, optional):  A string indicating the direction of the links ("forward", from reactants to products; "reverse", from products to reactants; "both", both "forward" and "reverse").  Default is "both".
 
@@ -272,6 +331,7 @@ def compute_link_flows(
         scale,
         nuc_xpath,
         reac_xpath,
+        user_funcs,
         direction,
         order,
     )
@@ -282,6 +342,7 @@ def compute_link_flows_for_zones(
     zones,
     nuc_xpath="",
     reac_xpath="",
+    user_funcs="",
     direction="both",
     include_dt=False,
     order="normal",
@@ -300,6 +361,14 @@ def compute_link_flows_for_zones(
         ``reac_xpath`` (:obj:`str`, optional): XPath expression
         to select reactions for flow computations.  Defaults to all
         reactions.
+
+        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
+        functions associated with a user_rate key.
+        The prototype for each
+        user rate function should be (*reaction*, *t9*, *zone*), where
+        *t9* is the temperature in billions of Kelvin and *reaction* and
+        *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and
+        zone instances.  Other data can be bound to the function.
 
         ``direction`` (:obj:`str`, optional):  A string indicating the direction of the links ("forward", from reactants to products; "reverse", from products to reactants; "both", both "forward" and "reverse").  Default is "both".
 
@@ -343,6 +412,12 @@ def compute_link_flows_for_zones(
                 scale = float(props[s_dt])
             else:
                 scale = 1
+            _user_funcs = {}
+            if user_funcs:
+                for func in user_funcs:
+                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
+                        func
+                    ](reaction, t9, zones[zone])
             f = _compute_link_flows_for_valid_reactions(
                 net,
                 float(props[s_t9]),
@@ -353,6 +428,7 @@ def compute_link_flows_for_zones(
                 scale,
                 nuc_xpath,
                 reac_xpath,
+                _user_funcs,
                 direction,
                 order,
             )
