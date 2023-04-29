@@ -72,8 +72,8 @@ def compute_flows(
         The prototype for each
         user rate function should be (*reaction*, *t9*), where
         *t9* is the temperature in billions of Kelvin and *reaction*
-        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction and
-        instances.  Other data can be bound to the function.
+        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
+        instance.  Other data can be bound to the function.
 
     Returns:
         A :obj:`dict` of reactions with each
@@ -289,8 +289,8 @@ def compute_link_flows(
         The prototype for each
         user rate function should be (*reaction*, *t9*), where
         *t9* is the temperature in billions of Kelvin and *reaction*
-        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction and
-        instances.  Other data can be bound to the function.
+        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
+        instance.  Other data can be bound to the function.
 
         ``direction`` (:obj:`str`, optional):  A string indicating the direction of the links ("forward", from reactants to products; "reverse", from products to reactants; "both", both "forward" and "reverse").  Default is "both".
 
