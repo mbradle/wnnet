@@ -134,7 +134,7 @@ class Net(wn.Nuc, wr.Reac):
                 return False
         return True
 
-    def compute_rates_for_reaction(self, name, t9, user_funcs=''):
+    def compute_rates_for_reaction(self, name, t9, user_funcs=""):
         """Method to compute the forward and reverse rates for a valid reaction.
 
         Args:
@@ -175,7 +175,7 @@ class Net(wn.Nuc, wr.Reac):
 
         return (forward, np.exp(d_exp) * (tup[1] / tup[0]) * forward)
 
-    def compute_rates(self, t9, nuc_xpath="", reac_xpath="", user_funcs=''):
+    def compute_rates(self, t9, nuc_xpath="", reac_xpath="", user_funcs=""):
         """Method to compute the forward and reverse rates for valid reactions in a network.
 
         Args:
