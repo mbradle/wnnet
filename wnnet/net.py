@@ -114,6 +114,50 @@ class Net(wn.Nuc, wr.Reac):
 
         return result
 
+    def _obeys_conservation_laws(self, nuclides, reaction):
+        ep = {"electron": -1, "positron": 1}
+        e_lepton = {
+            "electron": 1,
+            "positron": -1,
+            "neutrino_e": 1,
+            "anti-neutrino_e": -1,
+        }
+        mu_lepton = {"neutrino_mu": 1, "anti-neutrino_mu": -1}
+        tau_lepton = {"neutrino_tau": 1, "anti-neutrino_tau": -1}
+
+        d_z = 0
+        d_a = 0
+        d_l_e = 0
+        d_l_mu = 0
+        d_l_tau = 0
+
+        for sp in reaction.reactants:
+            if sp in nuclides:
+                d_a += nuclides[sp]["a"]
+                d_z += nuclides[sp]["z"]
+            if sp in ep:
+                d_z += ep[sp]
+            if sp in e_lepton:
+                d_l_e += e_lepton[sp]
+            if sp in mu_lepton:
+                d_l_mu += mu_lepton[sp]
+            if sp in tau_lepton:
+                d_l_tau += tau_lepton[sp]
+        for sp in reaction.products:
+            if sp in nuclides:
+                d_a -= nuclides[sp]["a"]
+                d_z -= nuclides[sp]["z"]
+            if sp in ep:
+                d_z -= ep[sp]
+            if sp in e_lepton:
+                d_l_e -= e_lepton[sp]
+            if sp in mu_lepton:
+                d_l_mu -= mu_lepton[sp]
+            if sp in tau_lepton:
+                d_l_tau -= tau_lepton[sp]
+
+        return d_a == 0 and d_z == 0 and d_l_e == 0 and d_l_mu == 0 and d_l_tau == 0
+
     def is_valid_reaction(self, name, nuc_xpath=""):
         """Method to determine a reaction is valid in the network.
 
@@ -129,6 +173,10 @@ class Net(wn.Nuc, wr.Reac):
 
         nuclides = self.get_nuclides(nuc_xpath=nuc_xpath)
         reaction = self.get_reactions()[name]
+
+        if not self._obeys_conservation_laws(nuclides, reaction):
+            return False
+
         for sp in reaction.nuclide_reactants + reaction.nuclide_products:
             if sp not in nuclides:
                 return False
