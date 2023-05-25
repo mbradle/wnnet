@@ -9,8 +9,8 @@ Version 1.2.0
 
 New:
 
-  * The check on whether a reaction is valid now checks baryon number,
-    charge, and lepton number conservation.
+  * The reaction validity check now ensures baryon number, charge,
+    and lepton number conservation.
 
 Version 1.1.0
 -------------
