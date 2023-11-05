@@ -101,7 +101,9 @@ def compute_flows(
     )
 
 
-def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath="", user_funcs=""):
+def compute_flows_for_zones(
+    net, zones, nuc_xpath="", reac_xpath="", user_funcs=""
+):
     """A routine to compute flows for a set of zones.
 
     Args:
@@ -153,9 +155,11 @@ def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath="", user_funcs=
             _user_funcs = {}
             if user_funcs:
                 for func in user_funcs:
-                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
+                    _user_funcs[
                         func
-                    ](reaction, t9, _zone)
+                    ] = lambda reaction, t9, func=func: user_funcs[func](
+                        reaction, t9, _zone
+                    )
             zone_flows[zone] = _compute_flows_for_valid_reactions(
                 net,
                 t9,
@@ -244,9 +248,17 @@ def _compute_link_flows_for_valid_reactions(
                     if direction == "both":
                         for target in products:
                             if order == "normal":
-                                tup = (source, target, -reverse * p_source * scale)
+                                tup = (
+                                    source,
+                                    target,
+                                    -reverse * p_source * scale,
+                                )
                             else:
-                                tup = (target, source, -reverse * p_source * scale)
+                                tup = (
+                                    target,
+                                    source,
+                                    -reverse * p_source * scale,
+                                )
                             tup_array.append(tup)
 
         link_flows[reaction] = tup_array
@@ -386,7 +398,9 @@ def compute_link_flows_for_zones(
 
     """
 
-    assert direction == "forward" or direction == "reverse" or direction == "both"
+    assert (
+        direction == "forward" or direction == "reverse" or direction == "both"
+    )
     assert order == "normal" or order == "reversed"
 
     nuclides = net.get_nuclides()
@@ -415,9 +429,11 @@ def compute_link_flows_for_zones(
             _user_funcs = {}
             if user_funcs:
                 for func in user_funcs:
-                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
+                    _user_funcs[
                         func
-                    ](reaction, t9, zones[zone])
+                    ] = lambda reaction, t9, func=func: user_funcs[func](
+                        reaction, t9, zones[zone]
+                    )
             f = _compute_link_flows_for_valid_reactions(
                 net,
                 float(props[s_t9]),

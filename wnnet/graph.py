@@ -332,7 +332,13 @@ def make_time_t9_rho_flow_string(zone, zone_label, f_max):
     rho = float(props["rho"])
 
     return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
-        fman(time), fexp(time), t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
+        fman(time),
+        fexp(time),
+        t9,
+        fman(rho),
+        fexp(rho),
+        fman(f_max),
+        fexp(f_max),
     )
 
 
@@ -363,7 +369,13 @@ def make_time_t9_rho_current_string(zone, zone_label, f_max):
     rho = float(props["rho"])
 
     return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. int. current = {:.2f} x 10<sup>{:d}</sup>>".format(
-        fman(time), fexp(time), t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
+        fman(time),
+        fexp(time),
+        t9,
+        fman(rho),
+        fexp(rho),
+        fman(f_max),
+        fexp(f_max),
     )
 
 
@@ -600,14 +612,22 @@ def _create_flow_graph(
                 for reactant in reactions[r].nuclide_reactants:
                     for product in reactions[r].nuclide_products:
                         DG.add_edge(
-                            reactant, product, weight=tup[0], reaction=r, arrowsize=0.2
+                            reactant,
+                            product,
+                            weight=tup[0],
+                            reaction=r,
+                            arrowsize=0.2,
                         )
 
             if tup[1] > 0:
                 for product in reactions[r].nuclide_products:
                     for reactant in reactions[r].nuclide_reactants:
                         DG.add_edge(
-                            product, reactant, weight=tup[1], reaction=r, arrowsize=0.2
+                            product,
+                            reactant,
+                            weight=tup[1],
+                            reaction=r,
+                            arrowsize=0.2,
                         )
 
         elif flow_type == "net":
@@ -1088,7 +1108,9 @@ def create_network_graph(
      
     """
 
-    assert direction == "forward" or direction == "reverse" or direction == "both"
+    assert (
+        direction == "forward" or direction == "reverse" or direction == "both"
+    )
 
     result = {}
 
@@ -1219,14 +1241,22 @@ def _create_integrated_current_graph(
             for reactant in reactions[r].nuclide_reactants:
                 for product in reactions[r].nuclide_products:
                     DG.add_edge(
-                        reactant, product, weight=f[r], reaction=r, arrowsize=0.2
+                        reactant,
+                        product,
+                        weight=f[r],
+                        reaction=r,
+                        arrowsize=0.2,
                     )
 
         if f[r] < 0:
             for product in reactions[r].nuclide_products:
                 for reactant in reactions[r].nuclide_reactants:
                     DG.add_edge(
-                        product, reactant, weight=-f[r], reaction=r, arrowsize=0.2
+                        product,
+                        reactant,
+                        weight=-f[r],
+                        reaction=r,
+                        arrowsize=0.2,
                     )
 
     # Apply attributes
