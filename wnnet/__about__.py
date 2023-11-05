@@ -8,6 +8,6 @@ __all__ = [
 
 __title__ = "wnnet"
 __summary__ = "Python project to handle webnucleo reaction networks"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __author__ = "Clemson University"
 __copyright__ = "Clemson University, 2022-2023"
