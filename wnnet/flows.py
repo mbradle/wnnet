@@ -200,7 +200,7 @@ def _compute_link_flows_for_valid_reactions(
             reaction, t9, user_funcs=user_funcs
         )
 
-        if direction == "forward" or direction == "both" or direction == "all":
+        if direction == "forward" or direction == "both":
             forward *= np.power(rho, len(_reaction.nuclide_reactants) - 1)
             forward /= dups[reaction][0]
 
@@ -216,7 +216,7 @@ def _compute_link_flows_for_valid_reactions(
                         tup = (target, source, forward * p_source * scale)
                     tup_array.append(tup)
 
-                if direction == "all":
+                if direction == "both":
                     for target in reactants:
                         if order == "normal":
                             tup = (source, target, -forward * p_source * scale)
@@ -225,7 +225,7 @@ def _compute_link_flows_for_valid_reactions(
                         tup_array.append(tup)
 
         if not net.is_weak_reaction(reaction):
-            if direction == "reverse" or direction == "both" or direction == "all":
+            if direction == "reverse" or direction == "both":
                 reverse *= np.power(rho, len(_reaction.nuclide_products) - 1)
                 reverse /= dups[reaction][1]
 
@@ -241,7 +241,7 @@ def _compute_link_flows_for_valid_reactions(
                             tup = (target, source, reverse * p_source * scale)
                         tup_array.append(tup)
 
-                    if direction == "all":
+                    if direction == "both":
                         for target in products:
                             if order == "normal":
                                 tup = (source, target, -reverse * p_source * scale)
