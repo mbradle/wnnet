@@ -103,16 +103,10 @@ class Net(wn.Nuc, wr.Reac):
                 result -= nuclides[sp]["mass excess"]
 
         if (
-            "positron" in reaction.nuclide_products
-            and "neutrino_e" in reaction.nuclide_products
+            "positron" in reaction.products
+            and "neutrino_e" in reaction.products
         ):
             result -= 2.0 * wc.m_e_in_MeV
-
-        if (
-            "positron" in reaction.nuclide_reactants
-            and "anti-neutrino_e" in reaction_products
-        ):
-            result += 2.0 * wc.m_e_in_MeV
 
         return result
 
