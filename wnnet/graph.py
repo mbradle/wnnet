@@ -480,14 +480,15 @@ def _color_edges(G, net, color_tuples):
             G.edges[edge]["color"] = color[G.edges[edge]["reaction"]]
 
 
-def _get_pos_string(net, name, state_scaling):
+def _get_pos(net, name, state_scaling):
     z, a, state = net.xml.get_z_a_state_from_nuclide_name(name)
     n = a - z
     if state == "g":
         z -= state_scaling
     elif state == "m":
         z += state_scaling
-    return str(n) + "," + str(z) + "!"
+    return (n, z)
+    # return str(n) + ".," + str(z) + ".!"
 
 
 def _get_subset_and_anchors(net, induced_nuc_xpath):
@@ -715,7 +716,7 @@ def _create_flow_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
+        S2.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
         S2.nodes[node]["label"] = node_label_func(node)
 
     # Title
@@ -1175,7 +1176,7 @@ def create_network_graph(
         _node_label_func = lambda name: make_node_label(name, g_names)
 
     for node in S.nodes:
-        S.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
+        S.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
         S.nodes[node]["label"] = _node_label_func(node)
 
     _color_edges(S, net, reaction_color_tuples)
@@ -1319,7 +1320,7 @@ def _create_integrated_current_graph(
     S2 = nx.subgraph(DG, subset_nuclides)
 
     for node in S2.nodes:
-        S2.nodes[node]["pos"] = _get_pos_string(net, node, state_scaling)
+        S2.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
         S2.nodes[node]["label"] = zone_node_label_func(node)
 
     DG.graph["label"] = title_func(f_max)

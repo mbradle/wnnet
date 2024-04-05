@@ -4,6 +4,13 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 1.2.5
+-------------
+
+Fix:
+
+  * The graph node positioning has been changed for better rendering of graphs.
+
 Version 1.2.4
 -------------
 
