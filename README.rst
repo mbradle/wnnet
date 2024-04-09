@@ -4,7 +4,7 @@ Overview
 wnnet is a python package for handling
 `webnucleo <http://webnucleo.org/>`_ reaction networks.
 
-|pypi| |license| |black|
+|pypi| |doc_stat| |license| |black|
 
 Installation
 ------------
@@ -46,5 +46,8 @@ The best way to get started using wnnet is to follow the
     :target: https://github.com/psf/black
 .. |pypi| image:: https://badge.fury.io/py/wnnet.svg
     :target: https://badge.fury.io/py/wnnet
-.. |license| image:: https://img.shields.io/github/license/jaadt7/lvlspy
+.. |license| image:: https://img.shields.io/github/license/mbradle/wnnet
     :alt: GitHub 
+.. |doc_stat| image:: https://readthedocs.org/projects/wnnet/badge/?version=latest
+    :target: https://wnnet.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
