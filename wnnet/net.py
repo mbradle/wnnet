@@ -45,9 +45,7 @@ class Net(wn.Nuc, wr.Reac):
 
         result = {}
 
-        for r in self.get_valid_reactions(
-            nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
-        ):
+        for r in self.get_valid_reactions(nuc_xpath=nuc_xpath, reac_xpath=reac_xpath):
             tmp = self.compute_reaction_Q_value(r)
             if tmp:
                 result[r] = tmp
@@ -102,10 +100,7 @@ class Net(wn.Nuc, wr.Reac):
             else:
                 result -= nuclides[sp]["mass excess"]
 
-        if (
-            "positron" in reaction.products
-            and "neutrino_e" in reaction.products
-        ):
+        if "positron" in reaction.products and "neutrino_e" in reaction.products:
             result -= 2.0 * wc.m_e_in_MeV
 
         return result
@@ -152,13 +147,7 @@ class Net(wn.Nuc, wr.Reac):
             if sp in tau_lepton:
                 d_l_tau -= tau_lepton[sp]
 
-        return (
-            d_a == 0
-            and d_z == 0
-            and d_l_e == 0
-            and d_l_mu == 0
-            and d_l_tau == 0
-        )
+        return d_a == 0 and d_z == 0 and d_l_e == 0 and d_l_mu == 0 and d_l_tau == 0
 
     def is_valid_reaction(self, name, nuc_xpath=""):
         """Method to determine a reaction is valid in the network.
@@ -249,8 +238,6 @@ class Net(wn.Nuc, wr.Reac):
         result = {}
 
         for r in v_reactions:
-            result[r] = self.compute_rates_for_reaction(
-                r, t9, user_funcs=user_funcs
-            )
+            result[r] = self.compute_rates_for_reaction(r, t9, user_funcs=user_funcs)
 
         return result

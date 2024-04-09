@@ -18,9 +18,7 @@ class Reac:
     def __init__(self, file, reac_xpath=""):
         self.xml = wx.Xml(file)
         self.reactions = {}
-        self.reactions[reac_xpath] = self.xml.get_reaction_data(
-            reac_xpath=reac_xpath
-        )
+        self.reactions[reac_xpath] = self.xml.get_reaction_data(reac_xpath=reac_xpath)
 
     def get_reactions(self, reac_xpath=""):
         """Method to return a collection of reactions.

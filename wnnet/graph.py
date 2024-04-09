@@ -1109,9 +1109,7 @@ def create_network_graph(
      
     """
 
-    assert (
-        direction == "forward" or direction == "reverse" or direction == "both"
-    )
+    assert direction == "forward" or direction == "reverse" or direction == "both"
 
     result = {}
 
