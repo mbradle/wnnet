@@ -5,6 +5,7 @@ import wnnet.net as wn
 import wnnet.zones as wz
 import wnnet.flows as wf
 
+from multiprocessing import Pool
 
 def get_solar_species():
     """A method to return the naturally-occurring solar-system species.
