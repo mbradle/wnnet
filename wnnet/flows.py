@@ -1,7 +1,9 @@
 """This module computes various reaction flows in a network."""
-
+import pickle
+import jsonpickle
 import wnutils.xml as wx
 import numpy as np
+from multiprocessing import Pool
 
 
 def _compute_flows_for_valid_reactions(
@@ -100,10 +102,45 @@ def compute_flows(
         user_funcs,
     )
 
+def par_flow(zone,zones,user_funcs,net_pickled,valid_reactions_pickled,dups_pickled,
+             nuc_xpath,reac_xpath):
+    
 
-def compute_flows_for_zones(
-    net, zones, nuc_xpath="", reac_xpath="", user_funcs=""
-):
+    net = jsonpickle.decode(net_pickled)
+    valid_reactions = pickle.loads(valid_reactions_pickled)
+    dups = pickle.loads(dups_pickled)
+
+    s_t9 = "t9"
+    s_rho = "rho"
+    _zone = zones[zone]
+    props = _zone["properties"]
+    if s_t9 in props and s_rho in props:
+        t9 = float(props[s_t9])
+        rho = float(props[s_rho])
+        _user_funcs = {}
+        if user_funcs:
+            for func in user_funcs:
+                _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
+                    func
+                    ](reaction, t9, _zone)
+        return _compute_flows_for_valid_reactions(
+                net,
+                t9,
+                rho,
+                _zone["mass fractions"],
+                valid_reactions,
+                dups,
+                nuc_xpath,
+                reac_xpath,
+                _user_funcs,
+            )
+    
+def arg_unpack(args):
+    zone,zones,user_funcs,net_pickled,valid_reactions_pickled,dups_pickled,nuc_xpath,reac_xpath = args
+    return par_flow(zone,zones,user_funcs,net_pickled,valid_reactions_pickled,dups_pickled,
+             nuc_xpath,reac_xpath)
+
+def compute_flows_for_zones(net, zones, nuc_xpath="", reac_xpath="", user_funcs=""):
     """A routine to compute flows for a set of zones.
 
     Args:
@@ -135,15 +172,20 @@ def compute_flows_for_zones(
         reverse flow.
 
     """
-
     zone_flows = {}
-
     valid_reactions = net.get_valid_reactions(
         nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
     )
-
     dups = net.compute_duplicate_factors()
 
+    net_pickled = jsonpickle.encode(net)
+    valid_reactions_pickled = pickle.dumps(valid_reactions)
+    dups_pickled = pickle.dumps(dups)
+
+
+    args_list = [(zone,zones,user_funcs,net_pickled,valid_reactions_pickled
+                  ,dups_pickled,nuc_xpath,reac_xpath) for zone in zones]
+    '''
     for zone in zones:
         s_t9 = "t9"
         s_rho = "rho"
@@ -155,11 +197,9 @@ def compute_flows_for_zones(
             _user_funcs = {}
             if user_funcs:
                 for func in user_funcs:
-                    _user_funcs[
+                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
                         func
-                    ] = lambda reaction, t9, func=func: user_funcs[func](
-                        reaction, t9, _zone
-                    )
+                    ](reaction, t9, _zone)
             zone_flows[zone] = _compute_flows_for_valid_reactions(
                 net,
                 t9,
@@ -171,7 +211,12 @@ def compute_flows_for_zones(
                 reac_xpath,
                 _user_funcs,
             )
+        '''
 
+    with Pool() as pool:
+        zone_flows = pool.map(arg_unpack, args_list)    
+    
+    zone_flows = dict(zip(zones,zone_flows))
     return zone_flows
 
 
@@ -398,9 +443,7 @@ def compute_link_flows_for_zones(
 
     """
 
-    assert (
-        direction == "forward" or direction == "reverse" or direction == "both"
-    )
+    assert direction == "forward" or direction == "reverse" or direction == "both"
     assert order == "normal" or order == "reversed"
 
     nuclides = net.get_nuclides()
@@ -429,11 +472,9 @@ def compute_link_flows_for_zones(
             _user_funcs = {}
             if user_funcs:
                 for func in user_funcs:
-                    _user_funcs[
+                    _user_funcs[func] = lambda reaction, t9, func=func: user_funcs[
                         func
-                    ] = lambda reaction, t9, func=func: user_funcs[func](
-                        reaction, t9, zones[zone]
-                    )
+                    ](reaction, t9, zones[zone])
             f = _compute_link_flows_for_valid_reactions(
                 net,
                 float(props[s_t9]),

@@ -33,9 +33,7 @@ class Nuc:
         """
 
         if nuc_xpath not in self.nuclides:
-            self.nuclides[nuc_xpath] = self.xml.get_nuclide_data(
-                nuc_xpath=nuc_xpath
-            )
+            self.nuclides[nuc_xpath] = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
         return self.nuclides[nuc_xpath]
 
     def compute_nuclear_partition_function(self, name, t9):
@@ -97,9 +95,7 @@ class Nuc:
 
         m = wc.m_u_in_MeV * nuclide["a"] + nuclide["mass excess"]
 
-        result = self.compute_nuclear_partition_function(name, t9) / (
-            rho * wc.N_A
-        )
+        result = self.compute_nuclear_partition_function(name, t9) / (rho * wc.N_A)
 
         p1 = (m * wc.MeV_to_ergs) * wc.k_B * t9 * 1.0e9
         p2 = 2.0 * np.pi * np.power(wc.hbar * wc.c, 2)
