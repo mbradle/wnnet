@@ -487,8 +487,7 @@ def _get_pos(net, name, state_scaling):
         z -= state_scaling
     elif state == "m":
         z += state_scaling
-    return (n, z)
-    # return str(n) + ".," + str(z) + ".!"
+    return (float(n), float(z))
 
 
 def _get_subset_and_anchors(net, induced_nuc_xpath):

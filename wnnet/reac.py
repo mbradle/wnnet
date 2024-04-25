@@ -2,6 +2,7 @@
 
 import wnutils.xml as wx
 import numpy as np
+import math
 from scipy.interpolate import interp1d
 
 
@@ -48,7 +49,7 @@ class Reac:
                 dict[sp] = 1
         result = 1
         for sp in dict:
-            result *= np.math.factorial(dict[sp])
+            result *= math.factorial(dict[sp])
         return result
 
     def compute_reaction_duplicate_factors(self, name):
