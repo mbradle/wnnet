@@ -517,8 +517,6 @@ def _get_subset_and_anchors(net, induced_nuc_xpath):
     anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][0])])
     anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][-1])])
 
-    print(anchors)
-
     return (val, anchors)
 
 
