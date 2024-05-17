@@ -10,6 +10,7 @@ Version 1.2.6
 Fix:
 
   * A deprecated math function has been updated.
+  * Initialization of an array for graph anchors has been fixed.
 
 Version 1.2.5
 -------------

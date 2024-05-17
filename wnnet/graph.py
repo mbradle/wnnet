@@ -499,7 +499,7 @@ def _get_subset_and_anchors(net, induced_nuc_xpath):
         val.append(sp)
         dict[(nuclides[sp]["z"], nuclides[sp]["a"])] = sp
         if nuclides[sp]["z"] not in z_dict:
-            z_dict[nuclides[sp]["z"]] = []
+            z_dict[nuclides[sp]["z"]] = [nuclides[sp]["a"]]
         else:
             z_dict[nuclides[sp]["z"]].append(nuclides[sp]["a"])
 
@@ -516,6 +516,8 @@ def _get_subset_and_anchors(net, induced_nuc_xpath):
     anchors.append(dict[(z_array[0], z_dict[z_array[0]][-1])])
     anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][0])])
     anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][-1])])
+
+    print(anchors)
 
     return (val, anchors)
 
