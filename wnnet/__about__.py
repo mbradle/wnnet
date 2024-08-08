@@ -1,3 +1,7 @@
+"""
+A package of python routines to handle webnucleo networks.
+"""
+
 __all__ = [
     "__title__",
     "__summary__",

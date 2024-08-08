@@ -3,6 +3,7 @@
 import math
 import wnutils.xml as wx
 
+
 class Reac:
     """A class for handling reactions and their data.
 
