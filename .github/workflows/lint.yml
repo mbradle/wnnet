@@ -17,7 +17,7 @@ jobs:
           python-version: "3.x"
       - name: install dependencies
         run: |
-          pip install pylint numpy lxml wnutils
+          pip install pylint numpy lxml wnutils gslconsts dataclasses scipy functools
       - name: run linter
         run: |
           pylint --disable=C0103 wnnet/consts.py
