@@ -17,7 +17,10 @@ jobs:
           python-version: "3.x"
       - name: install dependencies
         run: |
-          pip install pylint numpy lxml wnutilsp
+          pip install pylint numpy lxml wnutils
       - name: run linter
         run: |
-          pylint --fail-under=9.8 xmlcoll/*.py
+          pylint --disable=C0103 wnnet/consts.py
+          pylint wnnet/__about__.py wnnet/__init__.py flows.py wnnet/graph.py
+                 wnnet/net.py wnnet/nuc.py wnnet/reac.py wnnet/zones.py
+
