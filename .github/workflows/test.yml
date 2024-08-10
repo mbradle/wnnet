@@ -18,10 +18,9 @@ jobs:
           python-version: "3.x"
       - name: install dependencies
         run: |
-          git clone https://bitbucket.org/mbradle/xmlcoll_xsd.git xmlcoll/xsd_pub
           python -m pip install --upgrade pip
           pip install pytest requests pandas openpyxl
           pip install -e .
       - name: run test
         run: |
-          pytest -v .github/workflows/xmlcoll_test.py
+          pytest -v .github/workflows/wnnet_test.py
