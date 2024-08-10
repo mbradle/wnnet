@@ -1,6 +1,7 @@
 """This module computes various reaction flows in a network."""
 
 from dataclasses import dataclass
+import functools
 import numpy as np
 
 
@@ -12,6 +13,14 @@ class _FlowData:
     scale: float = None
     direction: str = None
     order: str = None
+
+
+def _set_user_funcs_for_zone(user_funcs, my_zone):
+    result = {}
+    if user_funcs:
+        for key, value in user_funcs.items():
+            result[key] = functools.partial(value, zone=my_zone)
+    return result
 
 
 def _compute_flows_for_valid_reactions(
@@ -164,27 +173,28 @@ def compute_flows_for_zones(
     for key, value in zones.items():
         props = value["properties"]
         if "t9" in props and "rho" in props:
-            t_9 = float(props["t9"])
-            _user_funcs = {}
-            if user_funcs:
-                for func in user_funcs:
-                    _user_funcs[
-                        func
-                    ] = lambda reaction, t_9, func=func: user_funcs[func](
-                        reaction, t_9, value
-                    )
-
-            flow_data = _FlowData(valid_reactions, dups, _user_funcs)
+            flow_data = _FlowData(
+                valid_reactions,
+                dups,
+                _set_user_funcs_for_zone(user_funcs, value),
+            )
 
             zone_flows[key] = _compute_flows_for_valid_reactions(
                 net,
-                t_9,
+                float(props["t9"]),
                 float(props["rho"]),
                 value["mass fractions"],
                 flow_data,
             )
 
     return zone_flows
+
+
+def _swap_tuple_array(tup_array):
+    new_array = []
+    for tup in tup_array:
+        new_array.append((tup[1], tup[0], tup[0]))
+    return new_array
 
 
 def _compute_link_flows_for_valid_reactions(
@@ -196,19 +206,18 @@ def _compute_link_flows_for_valid_reactions(
 ):
     link_flows = {}
 
-    for reaction in flow_data.valid_reactions:
+    for reaction in flow_data.valid_reactions.values():
         tup_array = []
-        _reaction = flow_data.valid_reactions[reaction]
 
-        reactants = _reaction.nuclide_reactants
-        products = _reaction.nuclide_products
+        reactants = reaction.nuclide_reactants
+        products = reaction.nuclide_products
 
         forward, reverse = net.compute_rates_for_reaction(
-            reaction, t_9, user_funcs=flow_data.user_funcs
+            reaction.get_string(), t_9, user_funcs=flow_data.user_funcs
         )
 
         if flow_data.direction in ("forward", "both"):
-            forward *= np.power(rho, len(_reaction.nuclide_reactants) - 1)
+            forward *= np.power(rho, len(reactants) - 1)
             forward /= flow_data.dups[reaction][0]
 
             for i, source in enumerate(reactants):
@@ -216,39 +225,27 @@ def _compute_link_flows_for_valid_reactions(
                     net, mass_fractions, reactants, exclude_index=i
                 )
                 for target in products:
-                    if flow_data.order == "normal":
-                        tup = (
+                    tup_array.append(
+                        (
                             source,
                             target,
                             forward * p_source * flow_data.scale,
                         )
-                    else:
-                        tup = (
-                            target,
-                            source,
-                            forward * p_source * flow_data.scale,
-                        )
-                    tup_array.append(tup)
+                    )
 
                 if flow_data.direction == "both":
                     for target in reactants:
-                        if flow_data.order == "normal":
-                            tup = (
+                        tup_array.append(
+                            (
                                 source,
                                 target,
                                 -forward * p_source * flow_data.scale,
                             )
-                        else:
-                            tup = (
-                                target,
-                                source,
-                                -forward * p_source * flow_data.scale,
-                            )
-                        tup_array.append(tup)
+                        )
 
         if not net.is_weak_reaction(reaction):
             if flow_data.direction in ("reverse", "both"):
-                reverse *= np.power(rho, len(_reaction.nuclide_products) - 1)
+                reverse *= np.power(rho, len(products) - 1)
                 reverse /= flow_data.dups[reaction][1]
 
                 for i, source in enumerate(products):
@@ -256,52 +253,33 @@ def _compute_link_flows_for_valid_reactions(
                         net, mass_fractions, products, exclude_index=i
                     )
                     for target in reactants:
-                        if flow_data.order == "normal":
-                            tup = (
+                        tup_array.append(
+                            (
                                 source,
                                 target,
                                 reverse * p_source * flow_data.scale,
                             )
-                        else:
-                            tup = (
-                                target,
-                                source,
-                                reverse * p_source * flow_data.scale,
-                            )
-                        tup_array.append(tup)
+                        )
 
                     if flow_data.direction == "both":
                         for target in products:
-                            if flow_data.order == "normal":
-                                tup = (
+                            tup_array.append(
+                                (
                                     source,
                                     target,
                                     -reverse * p_source * flow_data.scale,
                                 )
-                            else:
-                                tup = (
-                                    target,
-                                    source,
-                                    -reverse * p_source * flow_data.scale,
-                                )
-                            tup_array.append(tup)
+                            )
+
+        if flow_data.order != "normal":
+            tup_array = _swap_tuple_array(tup_array)
 
         link_flows[reaction] = tup_array
 
     return link_flows
 
 
-def compute_link_flows(
-    net,
-    t_9,
-    rho,
-    mass_fractions,
-    nuc_xpath="",
-    reac_xpath="",
-    user_funcs="",
-    direction="both",
-    order="normal",
-):
+def compute_link_flows(net, t_9, rho, mass_fractions, **kwargs):
     """A routine to compute link flows for a given set of mass fractions
        at the input temperature and density.
 
@@ -355,11 +333,26 @@ def compute_link_flows(
 
     """
 
-    assert direction in ("forward", "reverse", "both", "all")
-    assert order in ("normal", "reversed")
+    def get_args(**kwargs):
+        my_defs = {
+            "nuc_xpath": "",
+            "reac_xpath": "",
+            "user_funcs": "",
+            "direction": "both",
+            "order": "normal",
+        }
+        for key in kwargs:
+            assert key in my_defs, f"{key} is not an allowed keyword"
+
+        return {**my_defs, **kwargs}
+
+    my_args = get_args(**kwargs)
+
+    assert my_args["direction"] in ("forward", "reverse", "both", "all")
+    assert my_args["order"] in ("normal", "reversed")
 
     valid_reactions = net.get_valid_reactions(
-        nuc_xpath=nuc_xpath, reac_xpath=reac_xpath
+        nuc_xpath=my_args["nuc_xpath"], reac_xpath=my_args["reac_xpath"]
     )
 
     dups = net.compute_duplicate_factors()
@@ -367,7 +360,12 @@ def compute_link_flows(
     scale = 1
 
     flow_data = _FlowData(
-        valid_reactions, dups, user_funcs, scale, direction, order
+        valid_reactions,
+        dups,
+        my_args["user_funcs"],
+        scale,
+        my_args["direction"],
+        my_args["order"],
     )
 
     return _compute_link_flows_for_valid_reactions(
@@ -458,39 +456,28 @@ def compute_link_flows_for_zones(net, zones, **kwargs):
 
     zone_link_flows = {}
 
-    for zone in zones:
-        props = zones[zone]["properties"]
+    for key, value in zones.items():
+        props = value["properties"]
         if "t9" in props and "rho" in props:
-            t_9 = float(props["t9"])
             if my_args["include_dt"]:
                 scale = float(props["dt"])
             else:
                 scale = 1
-            _user_funcs = {}
-            if my_args["user_funcs"]:
-                for func in my_args["user_funcs"]:
-                    _user_funcs[
-                        func
-                    ] = lambda reaction, t_9, func=func: my_args["user_funcs"][
-                        func
-                    ](
-                        reaction, t_9, zones[zone]
-                    )
 
             flow_data = _FlowData(
                 valid_reactions,
                 dups,
-                _user_funcs,
+                _set_user_funcs_for_zone(my_args["user_funcs"], value),
                 scale,
                 my_args["direction"],
                 my_args["order"],
             )
 
-            zone_link_flows[zone] = _compute_link_flows_for_valid_reactions(
+            zone_link_flows[key] = _compute_link_flows_for_valid_reactions(
                 net,
-                t_9,
+                float(props["t9"]),
                 float(props["rho"]),
-                zones[zone]["mass fractions"],
+                value["mass fractions"],
                 flow_data,
             )
 

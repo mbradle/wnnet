@@ -1,0 +1,27 @@
+name: pytest
+
+on:
+  push:
+      branches:
+        - develop
+        - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.x"
+      - name: install dependencies
+        run: |
+          git clone https://bitbucket.org/mbradle/xmlcoll_xsd.git xmlcoll/xsd_pub
+          python -m pip install --upgrade pip
+          pip install pytest requests pandas openpyxl
+          pip install -e .
+      - name: run test
+        run: |
+          pytest -v .github/workflows/xmlcoll_test.py
