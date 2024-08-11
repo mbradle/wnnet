@@ -17,10 +17,10 @@ jobs:
           python-version: "3.x"
       - name: install dependencies
         run: |
-          pip install pylint numpy lxml wnutils gslconsts dataclasses scipy functools
+          pip install pylint numpy lxml wnutils gslconsts dataclasses scipy
       - name: run linter
         run: |
           pylint --disable=C0103 wnnet/consts.py
-          pylint wnnet/__about__.py wnnet/__init__.py flows.py wnnet/graph.py
+          pylint wnnet/__about__.py wnnet/__init__.py wnnet/flows.py wnnet/graph.py
                  wnnet/net.py wnnet/nuc.py wnnet/reac.py wnnet/zones.py
 
