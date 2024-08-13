@@ -209,22 +209,22 @@ def _compute_link_flows_for_valid_reactions(
     for reaction in flow_data.valid_reactions.values():
         tup_array = []
 
-        reactants = reaction.nuclide_reactants
-        products = reaction.nuclide_products
-
         forward, reverse = net.compute_rates_for_reaction(
             reaction.get_string(), t_9, user_funcs=flow_data.user_funcs
         )
 
         if flow_data.direction in ("forward", "both"):
-            forward *= np.power(rho, len(reactants) - 1)
+            forward *= np.power(rho, len(reaction.nuclide_reactants) - 1)
             forward /= flow_data.dups[reaction][0]
 
-            for i, source in enumerate(reactants):
+            for i, source in enumerate(reaction.nuclide_reactants):
                 p_source = _compute_abundance_product(
-                    net, mass_fractions, reactants, exclude_index=i
+                    net,
+                    mass_fractions,
+                    reaction.nuclide_reactants,
+                    exclude_index=i,
                 )
-                for target in products:
+                for target in reaction.nuclide_products:
                     tup_array.append(
                         (
                             source,
@@ -234,7 +234,7 @@ def _compute_link_flows_for_valid_reactions(
                     )
 
                 if flow_data.direction == "both":
-                    for target in reactants:
+                    for target in reaction.nuclide_reactants:
                         tup_array.append(
                             (
                                 source,
@@ -243,33 +243,38 @@ def _compute_link_flows_for_valid_reactions(
                             )
                         )
 
-        if not net.is_weak_reaction(reaction):
-            if flow_data.direction in ("reverse", "both"):
-                reverse *= np.power(rho, len(products) - 1)
-                reverse /= flow_data.dups[reaction][1]
+        if not net.is_weak_reaction(reaction) and flow_data.direction in (
+            "reverse",
+            "both",
+        ):
+            reverse *= np.power(rho, len(reaction.nuclide_products) - 1)
+            reverse /= flow_data.dups[reaction][1]
 
-                for i, source in enumerate(products):
-                    p_source = _compute_abundance_product(
-                        net, mass_fractions, products, exclude_index=i
+            for i, source in enumerate(reaction.nuclide_products):
+                p_source = _compute_abundance_product(
+                    net,
+                    mass_fractions,
+                    reaction.nuclide_products,
+                    exclude_index=i,
+                )
+                for target in reaction.nuclide_reactants:
+                    tup_array.append(
+                        (
+                            source,
+                            target,
+                            reverse * p_source * flow_data.scale,
+                        )
                     )
-                    for target in reactants:
+
+                if flow_data.direction == "both":
+                    for target in reaction.nuclide_products:
                         tup_array.append(
                             (
                                 source,
                                 target,
-                                reverse * p_source * flow_data.scale,
+                                -reverse * p_source * flow_data.scale,
                             )
                         )
-
-                    if flow_data.direction == "both":
-                        for target in products:
-                            tup_array.append(
-                                (
-                                    source,
-                                    target,
-                                    -reverse * p_source * flow_data.scale,
-                                )
-                            )
 
         if flow_data.order != "normal":
             tup_array = _swap_tuple_array(tup_array)
