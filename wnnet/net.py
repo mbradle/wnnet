@@ -10,12 +10,13 @@ class Net(wn.Nuc, wr.Reac):
     """A class to store webnucleo networks.
 
     Args:
-        ``file`` (:obj:`str`): A string giving the name of the XML file with the network data.
+        ``file`` (:obj:`str`): A string giving the name of the XML file with\
+          the network data.
 
-        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select
+        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
          nuclides.  Default is all nuclides.
 
-        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select
+        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to select\
         reactions.  Default is all reactions.
 
     """
@@ -32,14 +33,14 @@ class Net(wn.Nuc, wr.Reac):
         """A method to compute reaction Q values for valid reactions in the network.
 
         Args:
-            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select
+            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
             the nuclides.
 
-            ``reac_xpath`` (:obj:`str`, optional): An XPath expression to select
-            the reactions.
+            ``reac_xpath`` (:obj:`str`, optional): An XPath expression to\
+            select the reactions.
 
         Returns:
-            A :obj:`dict`.  The keys for the dictionary are the reaction
+            A :obj:`dict`.  The keys for the dictionary are the reaction\
             strings and the values are the corresponding Q values.
 
         """
@@ -59,14 +60,14 @@ class Net(wn.Nuc, wr.Reac):
         """Method to retrieve the valid reactions in the network.
 
         Args:
-            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to
+            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression to\
               select nuclides.  Default is all nuclides.
 
-            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to
+            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to\
               select reactions.  Default is all reactions.
 
         Returns:
-            A :obj:`dict` of `wnutils <https://wnutils.readthedocs.io>`_
+            A :obj:`dict` of `wnutils <https://wnutils.readthedocs.io>`_ \
               reactions.
 
         """
@@ -88,7 +89,8 @@ class Net(wn.Nuc, wr.Reac):
             ``name`` (:obj:`str`):  A string giving the reaction.
 
         Returns:
-            A :obj:`float` giving the Q value for the reaction or None if the reaction is not valid.
+            A :obj:`float` giving the Q value for the reaction or None if the\
+             reaction is not valid.
 
         """
 
@@ -168,11 +170,11 @@ class Net(wn.Nuc, wr.Reac):
         Args:
             ``name`` (:obj:`str`):  A string giving the reaction.
 
-            ``nuclides`` (:obj:`str`, optional):  An XPath expression
+            ``nuclides`` (:obj:`str`, optional):  An XPath expression\
               to select nuclides.  Default is all nuclides.
 
         Returns:
-            A :obj:`bool` with value True if the reaction is valid and False
+            A :obj:`bool` with value True if the reaction is valid and False\
             if not.
 
         """
@@ -194,15 +196,15 @@ class Net(wn.Nuc, wr.Reac):
         Args:
             ``name`` (:obj:`str`):  A string giving the reaction.
 
-            ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at
+            ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at\
              which to compute the rates.
 
-            ``user_funcs`` (:obj:`dict`, optional): A dictionary of
+            ``user_funcs`` (:obj:`dict`, optional): A dictionary of\
              user-defined functions associated with a user_rate key.
 
         Returns:
-            A two-element :obj:`tuple` with the first element being the
-            forward rate and the second element being the reverse rate.
+            A two-element :obj:`tuple` with the first element being the\
+            forward rate and the second element being the reverse rate.\
             If the reaction is not valid, returns None.
 
         """
@@ -234,25 +236,26 @@ class Net(wn.Nuc, wr.Reac):
         return (forward, np.exp(d_exp) * (tup[1] / tup[0]) * forward)
 
     def compute_rates(self, t_9, nuc_xpath="", reac_xpath="", user_funcs=""):
-        """Method to compute the forward and reverse rates for valid reactions in a network.
+        """Method to compute the forward and reverse rates for valid\
+           reactions in a network.
 
         Args:
-            ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at
+            ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at\
               which to compute the rates.
 
-            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression
+            ``nuc_xpath`` (:obj:`str`, optional):  An XPath expression\
               to select nuclides.  Default is all nuclides.
 
-            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression
+            ``reac_xpath`` (:obj:`str`, optional):  An XPath expression\
               to select reactions.  Default is all reactions.
 
-            ``user_funcs`` (:obj:`dict`, optional): A dictionary of
+            ``user_funcs`` (:obj:`dict`, optional): A dictionary of\
               user-defined functions associated with a user_rate key.
 
         Returns:
-            A :obj:`dict` containing the rates.  The key is the reaction
-            string while the value is a two-element  :obj:`tuple` with the
-            first element being the forward rate and the second element
+            A :obj:`dict` containing the rates.  The key is the reaction\
+            string while the value is a two-element  :obj:`tuple` with the\
+            first element being the forward rate and the second element\
             being the reverse rate.
 
         """

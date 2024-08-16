@@ -1,9 +1,247 @@
+"""A module to create graphs from network data.
+
+.. _Allowed_keywords:
+
+The routines in this module allow for a number of optional keyword
+arguments.  Not all keyword arguments are available for each routine,
+however.  The doucmentation indicates which keyword arguments are
+appropriate for a given routine.
+
+The possible keyword arguments are:
+
+.. _induced_nuc_xpath:
+
+    * ``induced_nuc_xpath`` (:obj:`str`): An XPath expression to select\
+        the subset of nuclides in the graph.  The default is all species\
+        in the network.
+
+.. _induced_reac_xpath:
+
+    * ``induced_reac_xpath`` (:obj:`str`): An XPath expression to select\
+        the subset of reactions in the graph.  The default is all reactions\
+        in the network.
+
+.. _flow_type:
+
+    * ``flow_type`` (:obj:`str`) A string giving the flow type to be\
+        presented.  The possible values are `net`, which shows the forward\
+        minus the reverse flow (or the opposite if the reverse flow is larger),\
+        and `full`, which shows both the foward and reverse flows.  The\
+        default is `net`.
+
+.. _direction:
+
+    * ``direction`` (:obj:`str`) A string indicting the reaction directions\
+        to show.  Allowed values are `forward`, `reverse`, and `both`\
+        (the default, which shows both `forward` and `reverse`).
+
+.. _reaction_color_tuples:
+
+    * ``reaction_color_tuples`` (:obj:`list`): A list of :obj:`tuple` objects\
+        to select arc colors.  There is a tuple for each reaction type.\
+        The first member of the tuple is an XPath\
+        expression to select the reaction type while the second member is a\
+        string giving the color for that reaction type.  The default is that\
+        all arcs are black.
+
+.. _user_funcs:
+
+    * ``user_funcs`` (:obj:`dict`): A dictionary of user-defined\
+        functions associated with a user_rate key.  The prototype for each\
+        user rate function should be (*reaction*, *t_9*), where\
+        *t_9* is the temperature in billions of Kelvin and *reaction*\
+        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction\
+        instance.  Other data can be bound to the function.
+
+.. _zone_user_funcs:
+
+    *  ``zone_user_funcs`` (:obj:`dict`): A dictionary of user-defined\
+        functions associated with a user_rate key.\
+        The prototype for each\
+        user rate function should be (*reaction*, *t_9*, *zone*), where\
+        *t_9* is the temperature in billions of Kelvin and *reaction* and\
+        *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and\
+        zone instances.  Other data can be bound to the function.\
+
+.. _threshold:
+
+    * ``threshold`` (:obj:`float`):  The minimum flow (relative to the\
+        maximum flow) to be shown on the graph.  The default is 0.01.
+
+.. _scale:
+        
+    * ``scale`` (:obj:`float`):  Scaling factor for the maximum weight arc.\
+        The default is 10.
+
+.. _state_scaling:
+        
+    * ``state_scaling`` (:obj:`float`):  Scaling factor for isomeric states.\
+        The default is 0.35.
+
+.. _allow_isolated_species:
+        
+    * ``allow_isolated_species`` (:obj:`bool`):  Boolean to choose whether\
+        to allow isolated species (ones without incoming or outgoing arcs)\
+        in the graph.  The default is *False*.
+
+.. _title_func:
+
+    * ``title_func``: A\
+       `function <https://docs.python.org/3/library/stdtypes.html#functions>`_\
+        that applies the title to the graph.  The function must take\
+        one :obj:`float` argument giving the maximum flow.\
+        Other data can be bound to the function.  The function must return\
+        a :obj:`str` giving the title.  The default is\
+        :meth:`wnnet.graph.make_t9_rho_flow_string`.
+
+.. _zone_title_func:
+ 
+    *   ``zone_title_func``: A `function \
+        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+        that applies the title to the graph.  The function must take \
+        three arguments.  The first is a :obj:`float` giving the maximum\
+        flow.  The second is the zone object corresponding to\
+        the graph while the third is the zone label.  Other data can \
+        be bound to the function.  The function must return a :obj:`str` \
+        giving the title.  \
+        The default is :meth:`wnnet.graph.make_time_t9_rho_flow_string`
+        for flow graphs and.
+        :meth:`wnnet.graph.make_time_t9_rho_current_string` for integrated
+        current graphs.
+
+.. _node_label_func:
+        
+    * ``node_label_func``: A `function \
+        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+        that applies a label to each node in the graph.  The function \
+        must take as argument a species name.  Other data can be bound to \
+        the function.  The function must return a :obj:`str` \
+        giving the label.  \
+        The default is :meth:`wnnet.graph.make_node_label`.
+
+.. _zone_node_label_func:
+
+    *  ``zone_node_label_func``: A `function \
+        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+        that applies a label to each node in the graph.  The function \
+        must take as arguments a species name, a zone, and the zone label. \
+        Other data can be bound to \
+        the function.  The function must return a :obj:`str` \
+        giving the label.  The default is \
+        :meth:`wnnet.graph.make_zone_node_label`.
+
+.. _scale_edge_weight_func:
+        
+    *  ``scale_edge_weight_func``: A `function \
+        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+        that applies scales each edge weight in the graph.  The function \
+        must take as four arguments: a dictionary of edge data, the \
+        maximum edge weight in the scope of the graph, a scale factor \
+        by which to scale the weight (input as `scale`_ to this routine), \
+        and a threshold for not including the edge in the graph \
+        (input as `threshold`_ to this routine). \
+        Other data can be bound to \
+        the function.  The function must modify the weight in the \
+        edge data and return a :obj:`bool` indicating whether to include \
+        the edge in the graph (True) or not (False).\
+        The default is :meth:`wnnet.graph.scale_edge_weight`.
+
+.. _graph_attributes:
+        
+    * ``graph_attributes`` (:obj:`dict`):  A dictionary of graphviz attributes\
+        for the graph.  The default is *{"outputorder": "edgesfirst"}*.
+
+.. _edge_attributes:
+        
+    * ``edge_attributes`` (:obj:`dict`):  A dictionary of grapvhiz attributes\
+        for the edges in the graph.  The default is *{"arrowsize": 0.2}*.
+
+.. _node_attributes:
+        
+    * ``node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+        attributes for the nodes in the graph.  The default is\
+        *{ "shape": "box", "fontsize": 16, "style": "filled",\
+         "fillcolor": "white" }*.
+
+.. _solar_species:
+
+    * ``solar_species`` (:obj:`list`):  A list of species to be\
+        considered as the naturally occurring species.  The default is the list\
+        returned from :meth:`wnnet.graph.get_solar_species`.
+
+.. _solar_node_attributes:
+
+    * ``solar_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+        attributes to be applied to the solar species in the graph.\
+        The default is *{"fillcolor": "yellow", "style": "filled"}*.
+
+.. _special_node_attributes:
+
+    * ``special_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+        attributes to be applied to the special nodes in the graph.\
+        The dictionary has as keys the names of the special nodes and as values\
+        a dictionary of graphviz properties to be applied to the given special\
+        node.
+
+"""
+
 import operator
 from math import floor, log10
+import functools
 import networkx as nx
-import wnnet.net as wn
-import wnnet.zones as wz
 import wnnet.flows as wf
+
+
+def _get_keywords(kw_list, **kwargs):
+
+    for key in kwargs:
+        assert key in kw_list
+
+    def_kwargs = {}
+
+    def_kwargs["induced_nuc_xpath"] = ""
+    def_kwargs["induced_reac_xpath"] = ""
+    def_kwargs["flow_type"] = "net"
+    def_kwargs["direction"] = "both"
+    def_kwargs["reaction_color_tuples"] = None
+    def_kwargs["user_funcs"] = None
+    def_kwargs["zone_user_funcs"] = None
+    def_kwargs["threshold"] = 0.01
+    def_kwargs["scale"] = 10
+    def_kwargs["state_scaling"] = 0.35
+    def_kwargs["allow_isolated_species"] = False
+    def_kwargs["title_func"] = None
+    def_kwargs["zone_title_func"] = None
+    def_kwargs["node_label_func"] = None
+    def_kwargs["zone_node_label_func"] = None
+    def_kwargs["scale_edge_weight_func"] = None
+    def_kwargs["graph_attributes"] = {"outputorder": "edgesfirst"}
+    def_kwargs["node_attributes"] = {
+        "shape": "box",
+        "fontsize": 16,
+        "style": "filled",
+        "fillcolor": "white",
+    }
+    def_kwargs["edge_attributes"] = {"arrowsize": 0.2}
+    def_kwargs["solar_species"] = get_solar_species()
+    def_kwargs["solar_node_attributes"] = {
+        "fillcolor": "yellow",
+        "style": "filled",
+    }
+    def_kwargs["special_node_attributes"] = None
+
+    result = {}
+
+    for k_w in kw_list:
+        if k_w in kwargs:
+            if isinstance(def_kwargs[k_w], dict):
+                result[k_w] = {**def_kwargs[k_w], **kwargs[k_w]}
+            else:
+                result[k_w] = kwargs[k_w]
+        else:
+            result[k_w] = def_kwargs[k_w]
+
+    return result
 
 
 def get_solar_species():
@@ -305,105 +543,92 @@ def get_solar_species():
     ]
 
 
-def make_time_t9_rho_flow_string(zone, zone_label, f_max):
+def _fexp(_x):
+    # Add 0.01 for rounding for :.2f mantissa formating
+    return int(floor(log10(abs(_x)) + 0.01)) if _x != 0.0 else 0
+
+
+def _fman(_x):
+    return _x / 10.0 ** _fexp(_x)
+
+
+def make_time_t9_rho_flow_string(f_max, zone, zone_label):
     """The default title function for zone flow graphs.
 
     Args:
+        ``f_max`` (:obj:`float`):  The maximum flow in the scope of the graph.
+
         ``zone``:  A `wnutils <https://wnutils.readthedocs.io>`_ zone object.
 
         ``zone_label`` (:obj:`str` or :obj:`tuple`):  The label of the zone.
 
-        ``f_max`` (:obj:`float`):  The maximum flow in the scope of the graph.
     Returns:
         A :obj:`str`.  The title string.
 
     """
 
-    def fexp(f):
-        # Add 0.01 for rounding for :.2f mantissa formating
-        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
-
-    def fman(f):
-        return f / 10.0 ** fexp(f)
+    assert zone_label
 
     props = zone["properties"]
     time = float(props["time"])
-    t9 = float(props["t9"])
+    t_9 = float(props["t9"])
     rho = float(props["rho"])
 
-    return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
-        fman(time),
-        fexp(time),
-        t9,
-        fman(rho),
-        fexp(rho),
-        fman(f_max),
-        fexp(f_max),
-    )
+    return f"<time (s) = {_fman(time):.2f} x 10<sup>{_fexp(time):d}</sup>, \
+T<sub>9</sub> = {t_9:.2f}, \
+rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
+max. flow = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
 
 
-def make_time_t9_rho_current_string(zone, zone_label, f_max):
+def make_time_t9_rho_current_string(f_max, zone, zone_label):
     """The default title function for zone integrated current graphs.
 
     Args:
+        ``f_max`` (:obj:`float`):  The maximum integrated current in the scope\
+          of the graph.
+
         ``zone``:  A `wnutils <https://wnutils.readthedocs.io>`_ zone object.
 
         ``zone_label`` (:obj:`str` or :obj:`tuple`):  The label of the zone.
 
-        ``f_max`` (:obj:`float`):  The maximum integrated current in the scope of the graph.
     Returns:
         A :obj:`str`.  The title string.
 
     """
 
-    def fexp(f):
-        # Add 0.01 for rounding for :.2f mantissa formating
-        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
-
-    def fman(f):
-        return f / 10.0 ** fexp(f)
+    assert zone_label
 
     props = zone["properties"]
     time = float(props["time"])
-    t9 = float(props["t9"])
+    t_9 = float(props["t9"])
     rho = float(props["rho"])
 
-    return "<time (s) = {:.2f} x 10<sup>{:d}</sup>, T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. int. current = {:.2f} x 10<sup>{:d}</sup>>".format(
-        fman(time),
-        fexp(time),
-        t9,
-        fman(rho),
-        fexp(rho),
-        fman(f_max),
-        fexp(f_max),
-    )
+    return f"<time (s) = {_fman(time):.2f} x 10<sup>{_fexp(time):d}</sup>, \
+T<sub>9</sub> = {t_9:.2f}, \
+rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
+max. int. current = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup>>"
 
 
-def make_t9_rho_flow_string(f_max, t9, rho):
+def make_t9_rho_flow_string(f_max, t_9, rho):
     """The default title function for flow graphs.
 
     Args:
         ``f_max`` (:obj:`float`):  The maximum flow in the scope of the graph.
 
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which the flows are computed.  This value is bound by the calling function.
+        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which
+        the flows are computed.  This value is bound by the calling function.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at which the flows are computed.  This value is bound by the calling function.
+        ``rho`` (:obj:`float`):  The density in g/cc at which the flows are
+        computed.  This value is bound by the calling function.
 
     Returns:
         A :obj:`str`.  The title string.
 
     """
 
-    def fexp(f):
-        # Add 0.01 for rounding for :.2f mantissa formating
-        return int(floor(log10(abs(f)) + 0.01)) if f != 0.0 else 0
-
-    def fman(f):
-        return f / 10.0 ** fexp(f)
-
-    return "<T<sub>9</sub> = {:.2f}, rho (g/cc) = {:.2f} x 10<sup>{:d}</sup> (g/cc), max. flow = {:.2f} x 10<sup>{:d}</sup> (s<sup>-1</sup>)>".format(
-        t9, fman(rho), fexp(rho), fman(f_max), fexp(f_max)
-    )
+    return f"<T<sub>9</sub> = {t_9:.2f}, \
+rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
+max. flow = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
 
 
 def make_node_label(name, g_names):
@@ -412,7 +637,8 @@ def make_node_label(name, g_names):
     Args:
         ``name`` (:obj:`str`):  The species name.
 
-        ``g_names`` (:obj:`dict`):  A dictionary of graphviz names.  This dictionary is bound to the function by the calling routine.
+        ``g_names`` (:obj:`dict`):  A dictionary of graphviz names.\
+         This dictionary is bound to the function by the calling routine.
 
     Returns:
         A :obj:`str`.  The node label.
@@ -421,22 +647,26 @@ def make_node_label(name, g_names):
     return g_names[name]
 
 
-def make_zone_node_label(zone, zone_label, name, g_names):
+def make_zone_node_label(name, zone, zone_label, g_names):
     """The default zone node label function.
 
     Args:
+        ``name`` (:obj:`str`):  The species name.
+
         ``zone``:  A `wnutils <https://wnutils.readthedocs.io>`_ zone object.
 
         ``zone_label`` (:obj:`str` or :obj:`tuple`):  The label of the zone.
 
-        ``name`` (:obj:`str`):  The species name.
-
-        ``g_names`` (:obj:`dict`):  A dictionary of graphviz names.  This dictionary is bound to the function by the calling routine.
+        ``g_names`` (:obj:`dict`):  A dictionary of graphviz names.
+        This dictionary is bound to the function by the calling routine.
 
     Returns:
         A :obj:`str`.  The node label.
 
     """
+    assert zone
+    assert zone_label
+
     return make_node_label(name, g_names)
 
 
@@ -458,15 +688,15 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
     """
 
     keep_edge = True
-    r = edge_data["weight"] / f_max
-    if r >= threshold:
-        edge_data["penwidth"] = scale * r
+    _r = edge_data["weight"] / f_max
+    if _r >= threshold:
+        edge_data["penwidth"] = scale * _r
     else:
         keep_edge = False
     return keep_edge
 
 
-def _color_edges(G, net, color_tuples):
+def _color_edges(my_graph, net, color_tuples):
     color = {}
     for reaction in net.get_reactions():
         color[reaction] = "black"
@@ -476,1001 +706,801 @@ def _color_edges(G, net, color_tuples):
             for reaction in net.get_reactions(reac_xpath=color_tup[0]):
                 color[reaction] = color_tup[1]
 
-        for edge in G.edges:
-            G.edges[edge]["color"] = color[G.edges[edge]["reaction"]]
+        for edge in my_graph.edges:
+            my_graph.edges[edge]["color"] = color[
+                my_graph.edges[edge]["reaction"]
+            ]
 
 
-def _get_pos(net, name, state_scaling):
-    z, a, state = net.xml.get_z_a_state_from_nuclide_name(name)
-    n = a - z
+def _get_pos(coll, name, state_scaling):
+    _z, _a, state = coll.xml.get_z_a_state_from_nuclide_name(name)
+    _n = _a - _z
     if state == "g":
-        z -= state_scaling
+        _z -= state_scaling
     elif state == "m":
-        z += state_scaling
-    return (float(n), float(z))
+        _z += state_scaling
+    return (float(_n), float(_z))
 
 
-def _get_subset_and_anchors(net, induced_nuc_xpath):
-    val = []
-    dict = {}
+def _get_subset_and_anchors(nuclides):
+    species_subset = []
+    my_dict = {}
     z_dict = {}
-    nuclides = net.get_nuclides()
-    for sp in net.get_nuclides(nuc_xpath=induced_nuc_xpath):
-        val.append(sp)
-        dict[(nuclides[sp]["z"], nuclides[sp]["a"])] = sp
-        if nuclides[sp]["z"] not in z_dict:
-            z_dict[nuclides[sp]["z"]] = [nuclides[sp]["a"]]
+    for key, value in nuclides.items():
+        species_subset.append(key)
+        my_dict[(value["z"], value["a"])] = key
+        if value["z"] not in z_dict:
+            z_dict[value["z"]] = [value["a"]]
         else:
-            z_dict[nuclides[sp]["z"]].append(nuclides[sp]["a"])
+            z_dict[value["z"]].append(value["a"])
 
     z_array = []
 
-    for z in z_dict:
-        z_array.append(z)
-        z_dict[z].sort()
+    for key, value in z_dict.items():
+        z_array.append(key)
+        value.sort()
 
     z_array.sort()
 
     anchors = []
-    anchors.append(dict[(z_array[0], z_dict[z_array[0]][0])])
-    anchors.append(dict[(z_array[0], z_dict[z_array[0]][-1])])
-    anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][0])])
-    anchors.append(dict[(z_array[-1], z_dict[z_array[-1]][-1])])
+    anchors.append(my_dict[(z_array[0], z_dict[z_array[0]][0])])
+    anchors.append(my_dict[(z_array[0], z_dict[z_array[0]][-1])])
+    anchors.append(my_dict[(z_array[-1], z_dict[z_array[-1]][0])])
+    anchors.append(my_dict[(z_array[-1], z_dict[z_array[-1]][-1])])
 
-    return (val, anchors)
+    return (species_subset, anchors)
 
 
-def _apply_graph_attributes(G, graph_attributes):
+def _apply_graph_attributes(my_graph, graph_attributes):
     if graph_attributes:
-        for key in graph_attributes:
-            G.graph[key] = graph_attributes[key]
+        for key, value in graph_attributes.items():
+            my_graph.graph[key] = value
 
 
-def _apply_node_attributes(G, node_attributes):
+def _apply_node_attributes(my_graph, node_attributes):
     if node_attributes:
-        for key in node_attributes:
-            for node in G.nodes:
-                G.nodes[node][key] = node_attributes[key]
+        for key, value in node_attributes.items():
+            for node in my_graph.nodes:
+                my_graph.nodes[node][key] = value
 
 
-def _apply_edge_attributes(G, edge_attributes):
+def _apply_edge_attributes(my_graph, edge_attributes):
     if edge_attributes:
-        for key in edge_attributes:
-            for edge in G.edges:
-                G.edges[edge][key] = edge_attributes[key]
+        for key, value in edge_attributes.items():
+            for edge in my_graph.edges:
+                my_graph.edges[edge][key] = value
 
 
-def _apply_solar_node_attributes(G, solar_species, solar_node_attributes):
-    ss_species = solar_species
-    ss_node_attributes = solar_node_attributes
+def _apply_solar_node_attributes(
+    my_graph, solar_species, solar_node_attributes
+):
 
-    if not solar_species:
-        ss_species = get_solar_species()
-    if not solar_node_attributes:
-        ss_node_attributes = {"fillcolor": "yellow", "style": "filled"}
-
-    for node in ss_species:
-        if node in G.nodes:
-            for key in ss_node_attributes:
-                G.nodes[node][key] = ss_node_attributes[key]
+    for node in solar_species:
+        if node in my_graph.nodes:
+            for key, value in solar_node_attributes.items():
+                my_graph.nodes[node][key] = value
 
 
-def _apply_special_node_attributes(G, special_node_attributes):
+def _apply_special_node_attributes(my_graph, special_node_attributes):
     if special_node_attributes:
         for node in special_node_attributes:
-            for key in special_node_attributes[node]:
-                G.nodes[node][key] = special_node_attributes[node][key]
+            for key, value in special_node_attributes[node].items():
+                my_graph.nodes[node][key] = value
 
 
-def _create_flow_graph(
-    net,
-    f,
-    flow_type,
-    subset_nuclides,
-    anchors,
-    allow_isolated_species,
-    reaction_color_tuples,
-    threshold,
-    scale,
-    state_scaling,
-    title_func,
-    node_label_func,
-    scale_edge_weight_func,
-    graph_attributes,
-    node_attributes,
-    edge_attributes,
-    solar_species,
-    solar_node_attributes,
-    special_node_attributes,
-):
+def _create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
 
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    # Solar species
-
-    _solar_species = solar_species
-    if not solar_species:
-        _solar_species = get_solar_species()
-
-    # Solar species
-
-    _solar_species = solar_species
-    if not solar_species:
-        _solar_species = get_solar_species()
-
-    DG = nx.MultiDiGraph()
+    d_g = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape="box", fontsize=16)
+        d_g.add_node(nuc)
 
-    for r in f:
-        tup = f[r]
+    for key, value in my_flows.items():
+        tup = value
 
-        if flow_type == "full":
+        if my_args["flow_type"] == "full":
             if tup[0] > 0:
-                for reactant in reactions[r].nuclide_reactants:
-                    for product in reactions[r].nuclide_products:
-                        DG.add_edge(
-                            reactant,
-                            product,
-                            weight=tup[0],
-                            reaction=r,
-                            arrowsize=0.2,
+                for reactant in reactions[key].nuclide_reactants:
+                    for product in reactions[key].nuclide_products:
+                        d_g.add_edge(
+                            reactant, product, weight=tup[0], reaction=key
                         )
 
             if tup[1] > 0:
-                for product in reactions[r].nuclide_products:
-                    for reactant in reactions[r].nuclide_reactants:
-                        DG.add_edge(
-                            product,
-                            reactant,
-                            weight=tup[1],
-                            reaction=r,
-                            arrowsize=0.2,
+                for product in reactions[key].nuclide_products:
+                    for reactant in reactions[key].nuclide_reactants:
+                        d_g.add_edge(
+                            product, reactant, weight=tup[1], reaction=key
                         )
 
-        elif flow_type == "net":
+        elif my_args["flow_type"] == "net":
             net_flow = tup[0] - tup[1]
 
             if net_flow > 0:
-                for reactant in reactions[r].nuclide_reactants:
-                    for product in reactions[r].nuclide_products:
-                        DG.add_edge(
-                            reactant,
-                            product,
-                            weight=net_flow,
-                            reaction=r,
-                            arrowsize=0.2,
+                for reactant in reactions[key].nuclide_reactants:
+                    for product in reactions[key].nuclide_products:
+                        d_g.add_edge(
+                            reactant, product, weight=net_flow, reaction=key
                         )
 
             if net_flow < 0:
-                for product in reactions[r].nuclide_products:
-                    for reactant in reactions[r].nuclide_reactants:
-                        DG.add_edge(
-                            product,
-                            reactant,
-                            weight=-net_flow,
-                            reaction=r,
-                            arrowsize=0.2,
+                for product in reactions[key].nuclide_products:
+                    for reactant in reactions[key].nuclide_reactants:
+                        d_g.add_edge(
+                            product, reactant, weight=-net_flow, reaction=key
                         )
 
     # Apply attributes
 
-    _apply_graph_attributes(DG, graph_attributes)
+    _apply_graph_attributes(d_g, my_args["graph_attributes"])
 
-    _apply_node_attributes(DG, node_attributes)
+    _apply_node_attributes(d_g, my_args["node_attributes"])
 
-    _apply_edge_attributes(DG, edge_attributes)
+    _apply_edge_attributes(d_g, my_args["edge_attributes"])
 
-    _apply_solar_node_attributes(DG, _solar_species, solar_node_attributes)
+    _apply_solar_node_attributes(
+        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
+    )
 
-    _apply_special_node_attributes(DG, special_node_attributes)
+    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
     # Subgraph and maximum flow within subgraph
 
-    S = nx.subgraph(DG, subset_nuclides)
+    sub_graph = nx.subgraph(d_g, subset_nuclides)
 
-    w = nx.get_edge_attributes(S, "weight")
+    my_weights = nx.get_edge_attributes(sub_graph, "weight")
 
     # Set penwidth.  Remove edges that are below threshold
 
     f_max = 0
 
-    if len(w) > 0:
-        f_max = max(w.items(), key=operator.itemgetter(1))[1]
+    if len(my_weights) > 0:
+        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
 
-        if not scale_edge_weight_func:
-            _scale_edge_weight_func = lambda edge_data: scale_edge_weight(
-                edge_data, f_max, scale, threshold
+        if not my_args["scale_edge_weight_func"]:
+            _scale_edge_weight_func = functools.partial(
+                scale_edge_weight,
+                f_max=f_max,
+                scale=my_args["scale"],
+                threshold=my_args["threshold"],
             )
         else:
-            _scale_edge_weight_func = lambda edge_data: scale_edge_weight_func(
-                edge_data, f_max, scale, threshold
+            _scale_edge_weight_func = functools.partial(
+                my_args["scale_edge_weight_func"],
+                f_max=f_max,
+                scale=my_args["scale"],
+                threshold=my_args["threshold"],
             )
 
         remove_edges = []
-        for edge in DG.edges:
-            if not _scale_edge_weight_func(DG.get_edge_data(*edge)):
+        for edge in d_g.edges:
+            if not _scale_edge_weight_func(d_g.get_edge_data(*edge)):
                 remove_edges.append(edge)
 
-        DG.remove_edges_from(remove_edges)
+        d_g.remove_edges_from(remove_edges)
 
     # Remove isolated nodes if desired
 
-    if not allow_isolated_species:
-        isolated_nodes = list(nx.isolates(DG))
+    if not my_args["allow_isolated_species"]:
+        isolated_nodes = list(nx.isolates(d_g))
         for node in isolated_nodes:
-            if node not in _solar_species:
-                DG.remove_node(node)
+            if (
+                node not in my_args["solar_species"]
+                and node not in my_args["special_node_attributes"]
+            ):
+                d_g.remove_node(node)
 
     # Restore anchors
 
     for anchor in anchors:
-        if anchor not in DG.nodes:
-            DG.add_node(anchor, style="invis")
+        if anchor not in d_g.nodes:
+            d_g.add_node(anchor, style="invis")
 
     # Get new subset
 
-    S2 = nx.subgraph(DG, subset_nuclides)
+    sub_graph_2 = nx.subgraph(d_g, subset_nuclides)
 
-    for node in S2.nodes:
-        S2.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
-        S2.nodes[node]["label"] = node_label_func(node)
+    for node in sub_graph_2.nodes:
+        sub_graph_2.nodes[node]["pos"] = _get_pos(
+            net, node, my_args["state_scaling"]
+        )
+        sub_graph_2.nodes[node]["label"] = my_args["node_label_func"](node)
 
     # Title
 
-    DG.graph["label"] = title_func(f_max)
+    d_g.graph["label"] = my_args["title_func"](f_max)
 
-    _color_edges(S2, net, reaction_color_tuples)
+    _color_edges(sub_graph_2, net, my_args["reaction_color_tuples"])
 
-    return S2
+    return sub_graph_2
 
 
-def create_flow_graph(
-    net,
-    t9,
-    rho,
-    mass_fractions,
-    flow_type="net",
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    user_funcs="",
-    reaction_color_tuples=None,
-    threshold=0.01,
-    scale=10,
-    state_scaling=0.325,
-    allow_isolated_species=False,
-    title_func=None,
-    node_label_func=None,
-    scale_edge_weight_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
-):
-    """A routine to create a flow graph for a given set of mass fractions at the input temperature and density.
+def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
+    """A routine to create a flow graph for a given set of mass fractions at
+       the input temperature and density.
 
     Args:
         ``net``: A wnnet network. 
 
-        ``t9`` (:obj:`float`):  The temperature in 10\ :sup:`9` K at which to compute the flows. 
+        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which to\
+         compute the flows. 
 
-        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the flows.
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
+          flows.
         
-        ``mass_fractions`` (:obj:`float`): A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass fractions.
+        ``mass_fractions`` (:obj:`float`): A\
+          `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
+          fractions.
 
-        ``flow_type`` (:obj:`str`, optional): A string giving the flow type to be presented.  The possible values are `net`, which shows the forward minus the reverse flow (or the opposite if the reverse flow is larger), and `full`, which shows both the foward and reverse flows.
+        ``**kwargs``: The allowed optional\
+          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
+          `induced_nuc_xpath`_, `induced_reac_xpath`_, `flow_type`_,\
+          `user_funcs`_, `reaction_color_tuples`_, `threshold`_, `scale`_,\
+          `state_scaling`_, `allow_isolated_species`_, `title_func`_,\
+          `node_label_func`_, `scale_edge_weight_func`_, `graph_attributes`_,\
+          `edge_attributes`_, `node_attributes`_, `solar_species`_,\
+          `solar_node_attributes`_, `special_node_attributes`_.
 
-        ``induced_nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of nuclides in the graph.  The default is all species in the network.
-
-        ``induced_reac_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of reactions in the graph.  The default is all reactions in the network.
-
-        ``reaction_color_tuples`` (:obj:`tuple`, optional): A tuple to select arc colors for reaction types.  The first member of the tuple is an XPath expression to select the reaction type while the second member is a string giving the color for that reaction type.  The default is that all arcs are black.
-
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t9*), where
-        *t9* is the temperature in billions of Kelvin and *reaction*
-        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
-        instance.  Other data can be bound to the function.
-
-        ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
-        
-        ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
-        
-        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
-        
-        ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
-
-        ``title_func`` (optional): A `function <https://docs.python.org/3/library/stdtypes.html#functions>`_ that applies the title to the graph.  The function must take one :obj:`float` argument giving the maximum flow. Other data can be bound to the function.  The function must return a :obj:`str` giving the title.  The default is :meth:`wnnet.graph.make_t9_rho_flow_string`.
-        
-        ``node_label_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies a label to each node in the graph.  The function \
-            must take as argument a species name.  Other data can be bound to \
-            the function.  The function must return a :obj:`str` \
-            giving the label.  \
-            The default is :meth:`wnnet.graph.make_node_label`.
-        
-        ``scale_edge_weight_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies scales each edge weight in the graph.  The function \
-            must take as four arguments: a dictionary of edge data, the \
-            maximum edge weight in the scope of the graph, a scale factor \
-            by which to scale the weight (input as *scale* to this routine), \
-            and a threshold for not including the edge in the graph \
-            (input as *threshold* to this routine). \
-            Other data can be bound to \
-            the function.  The function must modify the weight in the \
-            edge data and return a :obj:`bool` indicating whether to include \
-            the edge in the graph (True) or not (False).\
-            The default is :meth:`wnnet.graph.scale_edge_weight`.
-        
-        ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
-
-        ``edge_attributes`` (:obj:`dict`, optional):  A dictionary of grapvhiz attributes for the edges in the graph.
-
-        ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
-
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
-
-        ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
-
-        ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
 
     Returns:
-        A `networkx multidigraph <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the flows.
+        A `networkx multidigraph \
+        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_\
+        showing the flows.
      
 
     """
-    assert flow_type == "net" or flow_type == "full"
 
-    f = wf.compute_flows(
+    my_list = [
+        "induced_nuc_xpath",
+        "induced_reac_xpath",
+        "flow_type",
+        "user_funcs",
+        "reaction_color_tuples",
+        "threshold",
+        "scale",
+        "state_scaling",
+        "allow_isolated_species",
+        "title_func",
+        "node_label_func",
+        "scale_edge_weight_func",
+        "graph_attributes",
+        "edge_attributes",
+        "node_attributes",
+        "solar_species",
+        "solar_node_attributes",
+        "special_node_attributes",
+    ]
+
+    my_args = _get_keywords(my_list, **kwargs)
+
+    assert my_args["flow_type"] in ("net", "full")
+
+    my_flows = wf.compute_flows(
         net,
-        t9,
+        t_9,
         rho,
         mass_fractions,
-        reac_xpath=induced_reac_xpath,
-        user_funcs=user_funcs,
+        reac_xpath=my_args["induced_reac_xpath"],
+        user_funcs=my_args["user_funcs"],
     )
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    subset_nuclides, anchors = _get_subset_and_anchors(
+        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
+    )
 
     # Title
 
-    if not title_func:
-        _title_func = lambda f_max: make_t9_rho_flow_string(f_max, t9, rho)
-    else:
-        _title_func = title_func
+    if not my_args["title_func"]:
+        my_args["title_func"] = functools.partial(
+            make_t9_rho_flow_string, t_9=t_9, rho=rho
+        )
 
     # Node label
 
-    if not node_label_func:
+    if not my_args["node_label_func"]:
         g_names = net.xml.get_graphviz_names(subset_nuclides)
-        _node_label_func = lambda name: make_node_label(name, g_names)
-    else:
-        _node_label_func = node_label_func
+        my_args["node_label_func"] = functools.partial(
+            make_node_label, g_names=g_names
+        )
 
     return _create_flow_graph(
-        net,
-        f,
-        flow_type,
-        subset_nuclides,
-        anchors,
-        allow_isolated_species,
-        reaction_color_tuples,
-        threshold,
-        scale,
-        state_scaling,
-        _title_func,
-        _node_label_func,
-        scale_edge_weight_func,
-        graph_attributes,
-        node_attributes,
-        edge_attributes,
-        solar_species,
-        solar_node_attributes,
-        special_node_attributes,
+        net, my_flows, subset_nuclides, anchors, **my_args
     )
 
 
-def create_zone_flow_graphs(
-    net,
-    zones,
-    flow_type="net",
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    reaction_color_tuples=None,
-    user_funcs="",
-    threshold=0.01,
-    scale=10,
-    state_scaling=0.325,
-    allow_isolated_species=False,
-    title_func=None,
-    zone_node_label_func=None,
-    scale_edge_weight_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
-):
+def create_zone_flow_graphs(net, zones, **kwargs):
     """A routine to create flow graphs for a set of zones.
 
     Args:
         ``net``: A wnnet network. 
 
-        ``zones``: A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of zones.
+        ``zones``: A `wnutils <https://wnutils.readthedocs.io>`_\
+         dictionary of zones.
 
-        ``flow_type`` (:obj:`str`, optional): A string giving the flow type to be presented.  The possible values are `net`, which shows the forward minus the reverse flow (or the opposite if the reverse flow is larger), and `full`, which shows both the foward and reverse flows.
-
-        ``induced_nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of nuclides in the graph.  The default is all species in the network.
-
-        ``induced_reac_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of reactions in the graph.  The default is all reactions in the network.
-
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t9*, *zone*), where
-        *t9* is the temperature in billions of Kelvin and *reaction* and
-        *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and
-        zone instances.  Other data can be bound to the function.
-
-        ``reaction_color_tuples`` (:obj:`tuple`, optional): A tuple to select arc colors for reaction types.  The first member of the tuple is an XPath expression to select the reaction type while the second member is a string giving the color for that reaction type.  The default is that all arcs are black.
-
-        ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
-        
-        ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
-        
-        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
-        
-        ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
-
-        ``title_func`` (optional): A `function \
-             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-             that applies the title to the graph.  The function must take \
-             three arguments.  The first is the zone object corresponding to\
-             the graph while the second is the zone label and the third is \
-             a :obj:`float` giving the maximum flow. Other data can \
-             be bound to the function.  The function must return a :obj:`str` \
-             giving the title.  \
-             The default is :meth:`wnnet.graph.make_time_t9_rho_flow_string.`.
-        
-        ``zone_node_label_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies a label to each node in the graph.  The function \
-            must take as arguments a zone, the zone label, and a species name. \
-            Other data can be bound to \
-            the function.  The function must return a :obj:`str` \
-            giving the label.  The default is \
-            :meth:`wnnet.graph.make_zone_node_label`.
-        
-        ``scale_edge_weight_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies scales each edge weight in the graph.  The function \
-            must take as four arguments: a dictionary of edge data, the \
-            maximum edge weight in the scope of the graph, a scale factor \
-            by which to scale the weight (input as *scale* to this routine), \
-            and a threshold for not including the edge in the graph \
-            (input as *threshold* to this routine). \
-            Other data can be bound to \
-            the function.  The function must modify the weight in the \
-            edge data and return a :obj:`bool` indicating whether to include \
-            the edge in the graph (True) or not (False).\
-            The default is :meth:`wnnet.graph.scale_edge_weight`.
-        
-        ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
-
-        ``edge_attributes`` (:obj:`dict`, optional):  A dictionary of grapvhiz attributes for the edges in the graph.
-
-        ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
-
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
-
-        ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
-
-        ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+        ``**kwargs``: The allowed optional\
+          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
+          `induced_nuc_xpath`_, `induced_reac_xpath`_, `flow_type`_,\
+          `zone_user_funcs`_, `reaction_color_tuples`_, `threshold`_,\
+          `scale`_, `state_scaling`_, `allow_isolated_species`_,\
+          `zone_title_func`_, `zone_node_label_func`_, `scale_edge_weight_func`_,\
+          `graph_attributes`_, `edge_attributes`_, `node_attributes`_,\
+          `solar_species`_, `solar_node_attributes`_, `special_node_attributes`_.
 
     Returns:
-        A :obj:`dict` of `networkx multidigraphs <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the flows.  The keys are the zone labels.
+        A :obj:`dict` of\
+        `networkx multidigraphs\
+         <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_\
+         showing the flows.  The keys are the zone labels.
      
-
     """
+
+    my_list = [
+        "induced_nuc_xpath",
+        "induced_reac_xpath",
+        "flow_type",
+        "zone_user_funcs",
+        "reaction_color_tuples",
+        "threshold",
+        "scale",
+        "state_scaling",
+        "allow_isolated_species",
+        "zone_title_func",
+        "zone_node_label_func",
+        "scale_edge_weight_func",
+        "graph_attributes",
+        "edge_attributes",
+        "node_attributes",
+        "solar_species",
+        "solar_node_attributes",
+        "special_node_attributes",
+    ]
+
+    my_args = _get_keywords(my_list, **kwargs)
 
     result = {}
 
-    f = wf.compute_flows_for_zones(
-        net, zones, reac_xpath=induced_reac_xpath, user_funcs=user_funcs
+    my_flows = wf.compute_flows_for_zones(
+        net,
+        zones,
+        reac_xpath=my_args["induced_reac_xpath"],
+        user_funcs=my_args["zone_user_funcs"],
     )
 
-    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    subset_nuclides, anchors = _get_subset_and_anchors(
+        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
+    )
+
+    g_names = net.xml.get_graphviz_names(subset_nuclides)
 
     # Loop on zones
 
-    for zone in f:
+    for key, value in zones.items():
 
         # Title
 
-        if not title_func:
-            _title_func = lambda f_max: make_time_t9_rho_flow_string(
-                zones[zone], zone, f_max
+        if not my_args["zone_title_func"]:
+            my_args["title_func"] = functools.partial(
+                make_time_t9_rho_flow_string, zone=value, zone_label=key
             )
         else:
-            _title_func = lambda f_max: title_func(zones[zone], zone, f_max)
+            my_args["title_func"] = functools.partial(
+                my_args["zone_title_func"], zone=value, zone_label=key
+            )
 
         # Node label
 
-        g_names = net.xml.get_graphviz_names(subset_nuclides)
-        if not zone_node_label_func:
-            _zone_node_label_func = lambda name: make_zone_node_label(
-                zones[zone], zone, name, g_names
+        if not my_args["zone_node_label_func"]:
+            my_args["node_label_func"] = functools.partial(
+                make_zone_node_label,
+                zone=value,
+                zone_label=key,
+                g_names=g_names,
             )
         else:
-            _zone_node_label_func = lambda name: zone_node_label_func(
-                zones[zone], zone, name
+            my_args["node_label_func"] = functools.partial(
+                my_args["zone_node_label_func"], zone=value, zone_label=key
             )
 
         # Create graph
 
-        result[zone] = _create_flow_graph(
-            net,
-            f[zone],
-            flow_type,
-            subset_nuclides,
-            anchors,
-            allow_isolated_species,
-            reaction_color_tuples,
-            threshold,
-            scale,
-            state_scaling,
-            _title_func,
-            _zone_node_label_func,
-            scale_edge_weight_func,
-            graph_attributes,
-            node_attributes,
-            edge_attributes,
-            solar_species,
-            solar_node_attributes,
-            special_node_attributes,
+        result[key] = _create_flow_graph(
+            net, my_flows[key], subset_nuclides, anchors, **my_args
         )
 
     return result
 
 
-def create_network_graph(
-    net,
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    direction="both",
-    reaction_color_tuples=None,
-    threshold=0.01,
-    scale=10,
-    state_scaling=0.325,
-    allow_isolated_species=False,
-    node_label_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
-):
-    """A routine to create a network graph showing species and reactions among them.
+def create_nuclides_graph(nuc, **kwargs):
+    """A routine to create a graph showing species.
+
+    Args:
+        ``nuc``: A wnnet nuclide object.
+
+        ``**kwargs``: The allowed optional\
+          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
+          `induced_nuc_xpath`_, `state_scaling`_, `node_label_func`_,\
+          `graph_attributes`_, `node_attributes`_, `solar_species`_,\
+          `solar_node_attributes`_, and `special_node_attributes`_.
+
+    Returns:
+        A \
+       `networkx multidigraph \
+        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_\
+        showing the nuclides.
+     
+    """
+
+    my_list = [
+        "induced_nuc_xpath",
+        "state_scaling",
+        "node_label_func",
+        "graph_attributes",
+        "node_attributes",
+        "solar_species",
+        "solar_node_attributes",
+        "special_node_attributes",
+    ]
+
+    my_args = _get_keywords(my_list, **kwargs)
+
+    d_g = nx.MultiDiGraph()
+
+    for species in nuc.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"]):
+        d_g.add_node(species)
+
+    # Apply attributes
+
+    _apply_graph_attributes(d_g, my_args["graph_attributes"])
+
+    _apply_node_attributes(d_g, my_args["node_attributes"])
+
+    _apply_solar_node_attributes(
+        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
+    )
+
+    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
+
+    # Node label
+
+    if my_args["node_label_func"]:
+        _node_label_func = my_args["node_label_func"]
+    else:
+        g_names = nuc.xml.get_graphviz_names(list(d_g.nodes.keys()))
+        _node_label_func = functools.partial(make_node_label, g_names=g_names)
+
+    for node in d_g.nodes:
+        d_g.nodes[node]["pos"] = _get_pos(nuc, node, my_args["state_scaling"])
+        d_g.nodes[node]["label"] = _node_label_func(node)
+
+    return d_g
+
+
+def create_network_graph(net, **kwargs):
+    """A routine to create a network graph showing species and reactions\
+       among them.
 
     Args:
         ``net``: A wnnet network. 
 
-        ``induced_nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of nuclides in the graph.  The default is all species in the network.
-
-        ``induced_reac_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of reactions in the graph.  The default is all reactions in the network.
-
-        ``direction`` (:obj:`str`, optional): A string indicting the reaction directions to show.  Allowed values are `forward`, `reverse`, and `both` (the default, which shows both `forward` and `reverse`).
-
-        ``reaction_color_tuples`` (:obj:`tuple`, optional): A tuple to select arc colors for reaction types.  The first member of the tuple is an XPath expression to select the reaction type while the second member is a string giving the color for that reaction type.  The default is that all arcs are black.
-
-        ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
-        
-        ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
-        
-        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
-        
-        ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
-
-        ``node_label_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies a label to each node in the graph.  The function \
-            must take as argument a species name.  Other data can be bound to \
-            the function.  The function must return a :obj:`str` \
-            giving the label.  The default is \
-            :meth:`wnnet.graph.make_node_label`.
-        
-        ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
-
-        ``edge_attributes`` (:obj:`dict`, optional):  A dictionary of grapvhiz attributes for the edges in the graph.
-
-        ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
-
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the list returned from :meth:`wnnet.graph.get_solar_species`.
-
-        ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
-
-        ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+        ``**kwargs``: The allowed optional\
+          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
+          `induced_nuc_xpath`_, `induced_reac_xpath`_, `direction`_,\
+          `reaction_color_tuples`_, `threshold`_, `scale`_, `state_scaling`_,\
+          `allow_isolated_species`_, `node_label_func`_, `graph_attributes`_,\
+          `edge_attributes`_, `node_attributes`_, `solar_species`_,\
+          `solar_node_attributes`_, `special_node_attributes`_.
 
     Returns:
-        A `networkx multidigraph <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the network; that is, the nuclides and reactions among them.
+        A `networkx multidigraph \
+        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ \
+        `showing the network; that is, the nuclides and reactions among them.
      
     """
 
-    assert (
-        direction == "forward" or direction == "reverse" or direction == "both"
-    )
+    my_list = [
+        "induced_nuc_xpath",
+        "induced_reac_xpath",
+        "direction",
+        "reaction_color_tuples",
+        "threshold",
+        "scale",
+        "state_scaling",
+        "allow_isolated_species",
+        "node_label_func",
+        "graph_attributes",
+        "node_attributes",
+        "edge_attributes",
+        "solar_species",
+        "solar_node_attributes",
+        "special_node_attributes",
+    ]
 
-    result = {}
+    my_args = _get_keywords(my_list, **kwargs)
+
+    assert my_args["direction"] in ("forward", "reverse", "both")
 
     nuclides = net.get_nuclides()
-    reactions = net.get_reactions(reac_xpath=induced_reac_xpath)
+    reactions = net.get_reactions(reac_xpath=my_args["induced_reac_xpath"])
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    val, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    val, anchors = _get_subset_and_anchors(
+        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
+    )
 
-    DG = nx.MultiDiGraph()
+    d_g = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape="box", fontsize=16)
+        d_g.add_node(nuc)
 
-    for r in reactions:
-        if direction == "forward" or direction == "both":
-            for reactant in reactions[r].nuclide_reactants:
-                for product in reactions[r].nuclide_products:
-                    DG.add_edge(reactant, product, reaction=r, arrowsize=0.2)
+    for key, value in reactions.items():
+        if my_args["direction"] in ("forward", "both"):
+            for reactant in value.nuclide_reactants:
+                for product in value.nuclide_products:
+                    d_g.add_edge(reactant, product, reaction=key)
 
-        if not net.is_weak_reaction(r) and (
-            direction == "reverse" or direction == "both"
+        if not net.is_weak_reaction(key) and (
+            my_args["direction"] in ("reverse", "both")
         ):
-            for product in reactions[r].nuclide_products:
-                for reactant in reactions[r].nuclide_reactants:
-                    DG.add_edge(product, reactant, reaction=r, arrowsize=0.2)
+            for product in value.nuclide_products:
+                for reactant in value.nuclide_reactants:
+                    d_g.add_edge(product, reactant, reaction=key)
 
     # Apply attributes
 
-    _apply_graph_attributes(DG, graph_attributes)
+    _apply_graph_attributes(d_g, my_args["graph_attributes"])
 
-    _apply_node_attributes(DG, node_attributes)
+    _apply_node_attributes(d_g, my_args["node_attributes"])
 
-    _apply_edge_attributes(DG, edge_attributes)
+    _apply_edge_attributes(d_g, my_args["edge_attributes"])
 
-    _apply_solar_node_attributes(DG, solar_species, solar_node_attributes)
+    _apply_solar_node_attributes(
+        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
+    )
 
-    _apply_special_node_attributes(DG, special_node_attributes)
+    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
     # Remove isolated nodes if desired
 
-    if not allow_isolated_species:
-        DG.remove_nodes_from(list(nx.isolates(DG)))
+    if not my_args["allow_isolated_species"]:
+        d_g.remove_nodes_from(list(nx.isolates(d_g)))
 
     # Restore anchors
 
     for anchor in anchors:
-        if anchor not in DG.nodes:
-            DG.add_node(anchor, style="invis")
+        if anchor not in d_g.nodes:
+            d_g.add_node(anchor, style="invis")
 
     # Subgraph
 
-    S = nx.subgraph(DG, val)
+    sub_graph = nx.subgraph(d_g, val)
 
     # Node label
 
-    if node_label_func:
-        _node_label_func = node_label_func
+    if my_args["node_label_func"]:
+        _node_label_func = my_args["node_label_func"]
     else:
-        g_names = net.xml.get_graphviz_names(list(S.nodes.keys()))
-        _node_label_func = lambda name: make_node_label(name, g_names)
+        g_names = net.xml.get_graphviz_names(list(sub_graph.nodes.keys()))
+        _node_label_func = functools.partial(make_node_label, g_names=g_names)
 
-    for node in S.nodes:
-        S.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
-        S.nodes[node]["label"] = _node_label_func(node)
+    for node in sub_graph.nodes:
+        sub_graph.nodes[node]["pos"] = _get_pos(
+            net, node, my_args["state_scaling"]
+        )
+        sub_graph.nodes[node]["label"] = _node_label_func(node)
 
-    _color_edges(S, net, reaction_color_tuples)
+    _color_edges(sub_graph, net, my_args["reaction_color_tuples"])
 
-    return S
+    return sub_graph
 
 
-def _create_integrated_current_graph(
-    net,
-    zone,
-    subset_nuclides,
-    induced_nuc_xpath,
-    induced_reac_xpath,
-    reaction_color_tuples,
-    threshold,
-    scale,
-    state_scaling,
-    allow_isolated_species,
-    title_func,
-    zone_node_label_func,
-    scale_edge_weight_func,
-    graph_attributes,
-    edge_attributes,
-    node_attributes,
-    solar_species,
-    solar_node_attributes,
-    special_node_attributes,
-):
+def _create_integrated_current_graph(net, zone, **my_args):
     nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
-    # Solar species
-
-    _solar_species = solar_species
-    if not solar_species:
-        _solar_species = get_solar_species()
-
-    # Solar species
-
-    _solar_species = solar_species
-    if not solar_species:
-        _solar_species = get_solar_species()
-
-    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    subset_nuclides, anchors = _get_subset_and_anchors(
+        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
+    )
 
     props = zone["properties"]
 
-    DG = nx.MultiDiGraph()
+    d_g = nx.MultiDiGraph()
 
     for nuc in nuclides:
-        DG.add_node(nuc, shape="box", fontsize=16)
+        d_g.add_node(nuc)
 
-    f = {}
+    f_currents = {}
 
     for prop in props:
         if isinstance(prop, tuple):
             if prop[0] == "flow current":
-                f[prop[1]] = float(props[prop])
+                f_currents[prop[1]] = float(props[prop])
 
-    for r in f:
+    for key, value in f_currents.items():
 
-        if f[r] > 0:
-            for reactant in reactions[r].nuclide_reactants:
-                for product in reactions[r].nuclide_products:
-                    DG.add_edge(
-                        reactant,
-                        product,
-                        weight=f[r],
-                        reaction=r,
-                        arrowsize=0.2,
-                    )
+        if value > 0:
+            for reactant in reactions[key].nuclide_reactants:
+                for product in reactions[key].nuclide_products:
+                    d_g.add_edge(reactant, product, weight=value, reaction=key)
 
-        if f[r] < 0:
-            for product in reactions[r].nuclide_products:
-                for reactant in reactions[r].nuclide_reactants:
-                    DG.add_edge(
-                        product,
-                        reactant,
-                        weight=-f[r],
-                        reaction=r,
-                        arrowsize=0.2,
+        if value < 0:
+            for product in reactions[key].nuclide_products:
+                for reactant in reactions[key].nuclide_reactants:
+                    d_g.add_edge(
+                        product, reactant, weight=-value, reaction=key
                     )
 
     # Apply attributes
 
-    _apply_graph_attributes(DG, graph_attributes)
+    _apply_graph_attributes(d_g, my_args["graph_attributes"])
 
-    _apply_node_attributes(DG, node_attributes)
+    _apply_node_attributes(d_g, my_args["node_attributes"])
 
-    _apply_edge_attributes(DG, edge_attributes)
+    _apply_edge_attributes(d_g, my_args["edge_attributes"])
 
-    _apply_solar_node_attributes(DG, _solar_species, solar_node_attributes)
+    _apply_solar_node_attributes(
+        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
+    )
 
-    _apply_special_node_attributes(DG, special_node_attributes)
+    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
     # Subgraph and maximum flow within subgraph
 
-    S = nx.subgraph(DG, subset_nuclides)
+    sub_graph = nx.subgraph(d_g, subset_nuclides)
 
-    w = nx.get_edge_attributes(S, "weight")
+    my_weights = nx.get_edge_attributes(sub_graph, "weight")
 
     # Set penwidth.  Remove edges that are below threshold
 
     f_max = 0
 
-    if len(w) > 0:
-        f_max = max(w.items(), key=operator.itemgetter(1))[1]
+    if len(my_weights) > 0:
+        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
 
-        if not scale_edge_weight_func:
-            _scale_edge_weight_func = lambda edge_data: scale_edge_weight(
-                edge_data, f_max, scale, threshold
+        if not my_args["scale_edge_weight_func"]:
+            _scale_edge_weight_func = functools.partial(
+                scale_edge_weight,
+                f_max=f_max,
+                scale=my_args["scale"],
+                threshold=my_args["threshold"],
             )
         else:
-            _scale_edge_weight_func = lambda edge_data: scale_edge_weight_func(
-                edge_data, f_max, scale, threshold
+            _scale_edge_weight_func = functools.partial(
+                my_args["scale_edge_weight_func"],
+                f_max=f_max,
+                scale=my_args["scale"],
+                threshold=my_args["threshold"],
             )
 
         remove_edges = []
-        for edge in DG.edges:
-            if not _scale_edge_weight_func(DG.get_edge_data(*edge)):
+        for edge in d_g.edges:
+            if not _scale_edge_weight_func(d_g.get_edge_data(*edge)):
                 remove_edges.append(edge)
 
-        DG.remove_edges_from(remove_edges)
+        d_g.remove_edges_from(remove_edges)
 
     # Remove isolated nodes if desired
 
-    if not allow_isolated_species:
-        isolated_nodes = list(nx.isolates(DG))
+    if not my_args["allow_isolated_species"]:
+        isolated_nodes = list(nx.isolates(d_g))
         for node in isolated_nodes:
-            if node not in _solar_species:
-                DG.remove_node(node)
+            if (
+                node not in my_args["solar_species"]
+                and node not in my_args["special_node_attributes"]
+            ):
+                d_g.remove_node(node)
 
     # Restore anchors
 
     for anchor in anchors:
-        if anchor not in DG.nodes:
-            DG.add_node(anchor, style="invis")
+        if anchor not in d_g.nodes:
+            d_g.add_node(anchor, style="invis")
 
     # Get new subset
 
-    S2 = nx.subgraph(DG, subset_nuclides)
+    sub_graph_2 = nx.subgraph(d_g, subset_nuclides)
 
-    for node in S2.nodes:
-        S2.nodes[node]["pos"] = _get_pos(net, node, state_scaling)
-        S2.nodes[node]["label"] = zone_node_label_func(node)
+    for node in sub_graph_2.nodes:
+        sub_graph_2.nodes[node]["pos"] = _get_pos(
+            net, node, my_args["state_scaling"]
+        )
+        sub_graph_2.nodes[node]["label"] = my_args["node_label_func"](node)
 
-    DG.graph["label"] = title_func(f_max)
+    d_g.graph["label"] = my_args["title_func"](f_max)
 
-    _color_edges(S2, net, reaction_color_tuples)
+    _color_edges(sub_graph_2, net, my_args["reaction_color_tuples"])
 
-    return S2
+    return sub_graph_2
 
 
-def create_zone_integrated_current_graphs(
-    net,
-    zones,
-    flow_type="net",
-    induced_nuc_xpath="",
-    induced_reac_xpath="",
-    reaction_color_tuples=None,
-    threshold=0.01,
-    scale=10,
-    state_scaling=0.325,
-    allow_isolated_species=False,
-    title_func=None,
-    zone_node_label_func=None,
-    scale_edge_weight_func=None,
-    graph_attributes=None,
-    edge_attributes=None,
-    node_attributes=None,
-    solar_species=None,
-    solar_node_attributes=None,
-    special_node_attributes=None,
-):
-    """A routine to create flow graphs for a set of zones.
+def create_zone_integrated_current_graphs(net, zones, **kwargs):
+    """A routine to create integrated currents graphs for a set of zones.
 
     Args:
         ``net``: A wnnet network. 
 
-        ``zones``: A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of zones.
+        ``zones``: A `wnutils <https://wnutils.readthedocs.io>`_ dictionary\
+          of zones.
 
-        ``flow_type`` (:obj:`str`, optional): A string giving the flow type to be presented.  The possible values are `net`, which shows the forward minus the reverse flow (or the opposite if the reverse flow is larger), and `full`, which shows both the foward and reverse flows.
-
-        ``induced_nuc_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of nuclides in the graph.  The default is all species in the network.
-
-        ``induced_reac_xpath`` (:obj:`str`, optional): An XPath expression to select the subset of reactions in the graph.  The default is all reactions in the network.
-
-        ``reaction_color_tuples`` (:obj:`tuple`, optional): A tuple to select arc colors for reaction types.  The first member of the tuple is an XPath expression to select the reaction type while the second member is a string giving the color for that reaction type.  The default is that all arcs are black.
-
-        ``threshold`` (:obj:`float`, optional):  The minimum flow (relative to the maximum flow) to be shown on the graph
-        
-        ``scale`` (:obj:`float`, optional):  Scaling factor for the maximum weight arc.
-        
-        ``state_scaling`` (:obj:`float`, optional):  Scaling factor for isomeric states.
-        
-        ``allow_isolated_species`` (:obj:`bool`, optional):  Boolean to choose whether to allow isolated species (ones without incoming or outgoing arcs) in the graph.
-
-        ``title_func`` (optional): A `function \
-             <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-             that applies the title to the graph.  The function must take \
-             three arguments.  The first is the zone object corresponding to \
-             the graph while the second is the zone label (a string or tuple) \
-             and the third is a :obj:`float` giving the maximum \
-             integrated current.  Other data can \
-             be bound to the function.  The function must return a :obj:`str` \
-             giving the title.  The default is \
-             :meth:`wnnet.graph.make_time_t9_rho_current_string`.
-        
-        ``zone_node_label_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies a label to each node in the graph.  The function \
-            must take three arguments: a zone, its label, and a species name. \
-            Other data can be bound to \
-            the function.  The function must return a :obj:`str` \
-            giving the label.  The default is \
-            :meth:`wnnet.graph.make_zone_node_label`.
-        
-        ``scale_edge_weight_func`` (optional): A `function \
-            <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-            that applies scales each edge weight in the graph.  The function \
-            must take as four arguments: a dictionary of edge data, the \
-            maximum edge weight in the scope of the graph, a scale factor \
-            by which to scale the weight (input as *scale* to this routine), \
-            and a threshold for not including the edge in the graph \
-            (input as *threshold* to this routine). \
-            Other data can be bound to \
-            the function.  The function must modify the weight in the \
-            edge data and return a :obj:`bool` indicating whether to include \
-            the edge in the graph (True) or not (False).\
-            The default is :meth:`wnnet.graph.scale_edge_weight`.
-        
-        ``graph_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the graph.
-
-        ``edge_attributes`` (:obj:`dict`, optional):  A dictionary of grapvhiz attributes for the edges in the graph.
-
-        ``node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes for the nodes in the graph.
-
-        ``solar_species`` (:obj:`list`, optional):  A list of species to be considered as the naturally occurring species.  The default is the Solar System's actual naturally occurring species.
-
-        ``solar_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the solar species in the graph.
-
-        ``special_node_attributes`` (:obj:`dict`, optional):  A dictionary of graphviz attributes to be applied to the special nodes in the graph.  The dictionary has as keys the names of the special nodes and as values a dictionary of graphviz properties to be applied to the given special node.
+        ``**kwargs``: The allowed optional\
+          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
+          `induced_nuc_xpath`_, `induced_reac_xpath`_,\
+          `reaction_color_tuples`_, `threshold`_, `scale`_, `state_scaling`_,\
+          `allow_isolated_species`_, `zone_title_func`_,\
+          `zone_node_label_func`_,\
+          `scale_edge_weight_func`_, `graph_attributes`_, `edge_attributes`_,\
+          `node_attributes`_, `solar_species`_, `solar_node_attributes`_,\
+          `special_node_attributes`_.
 
     Returns:
-        A :obj:`dict` of `networkx multidigraphs <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ showing the integrated currents.  The keys are the zone labels.
+        A :obj:`dict` of `networkx multidigraphs \
+        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ \
+        showing the integrated currents.  The keys are the zone labels.
 
     """
 
+    my_list = [
+        "induced_nuc_xpath",
+        "induced_reac_xpath",
+        "reaction_color_tuples",
+        "threshold",
+        "scale",
+        "state_scaling",
+        "allow_isolated_species",
+        "zone_title_func",
+        "zone_node_label_func",
+        "scale_edge_weight_func",
+        "graph_attributes",
+        "edge_attributes",
+        "node_attributes",
+        "solar_species",
+        "solar_node_attributes",
+        "special_node_attributes",
+    ]
+
+    my_args = _get_keywords(my_list, **kwargs)
+
     result = {}
 
-    subset_nuclides, anchors = _get_subset_and_anchors(net, induced_nuc_xpath)
+    nuc_names = list(net.get_nuclides().keys())
 
-    for zone in zones:
+    g_names = net.xml.get_graphviz_names(nuc_names)
+
+    for key, value in zones.items():
 
         # Title
 
-        if not title_func:
-            _title_func = lambda f_max: make_time_t9_rho_current_string(
-                zones[zone], zone, f_max
+        if not my_args["zone_title_func"]:
+            my_args["title_func"] = functools.partial(
+                make_time_t9_rho_current_string, zone=value, zone_label=key
             )
         else:
-            _title_func = lambda f_max: title_func(zones[zone], zone, f_max)
+            my_args["title_func"] = functools.partial(
+                my_args["zone_title_func"], zone=value, zone_label=key
+            )
 
         # Node label
 
-        g_names = net.xml.get_graphviz_names(subset_nuclides)
-        if not zone_node_label_func:
-            _zone_node_label_func = lambda name: make_zone_node_label(
-                zones[zone], zone, name, g_names
+        if not my_args["zone_node_label_func"]:
+            my_args["node_label_func"] = functools.partial(
+                make_zone_node_label,
+                zone=value,
+                zone_label=key,
+                g_names=g_names,
             )
         else:
-            _zone_node_label_func = lambda name: zone_node_label_func(
-                zones[zone], zone, name
+            my_args["node_label_func"] = functools.partial(
+                my_args["zone_node_label_func"],
+                zone=value,
+                zone_label=key,
+                g_names=g_names,
             )
 
-        result[zone] = _create_integrated_current_graph(
-            net,
-            zones[zone],
-            subset_nuclides,
-            induced_nuc_xpath,
-            induced_reac_xpath,
-            reaction_color_tuples,
-            threshold,
-            scale,
-            state_scaling,
-            allow_isolated_species,
-            _title_func,
-            _zone_node_label_func,
-            scale_edge_weight_func,
-            graph_attributes,
-            edge_attributes,
-            node_attributes,
-            solar_species,
-            solar_node_attributes,
-            special_node_attributes,
-        )
+        result[key] = _create_integrated_current_graph(net, value, **my_args)
 
     return result

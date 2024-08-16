@@ -8,9 +8,10 @@ class Reac:
     """A class for handling reactions and their data.
 
     Args:
-        ``file`` (:obj:`str`): A string giving the XML file name with the reaction data.
+        ``file`` (:obj:`str`): A string giving the XML file name with the\
+           reaction data.
 
-        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to
+        ``reac_xpath`` (:obj:`str`, optional):  An XPath expression to\
          select reactions.  Default is all reactions.
 
     """
@@ -26,7 +27,7 @@ class Reac:
         """Method to return a collection of reactions.
 
         Args:
-            ``reac_xpath`` (:obj:`str`, optional): An XPath expression
+            ``reac_xpath`` (:obj:`str`, optional): An XPath expression\
              to select the reactions.  Default is all reactions.
 
         Returns:
@@ -59,8 +60,8 @@ class Reac:
             ``name`` (:obj:`str`): A string giving the reaction.
 
         Returns:
-            A two-element :obj:`tuple`.  The first element is the duplicate
-            factor for the forward reaction.  The second element is the
+            A two-element :obj:`tuple`.  The first element is the duplicate\
+            factor for the forward reaction.  The second element is the\
             duplicate factor for the reverse reaction.
 
         """
@@ -75,14 +76,14 @@ class Reac:
         """Method to compute the duplicate factors for reactions in the reaction collection.
 
         Args:
-            ``reac_xpath`` (:obj:`str`, optional): An XPath expression
+            ``reac_xpath`` (:obj:`str`, optional): An XPath expression\
             to select reactions.  Default is all reactions.
 
         Returns:
-            A :obj:`dict` containing the factors.  The keys are reaction
-            strings.  The values are two-element :obj:`tuple` objects
-            with the first element the duplicate factor for the
-            forward reaction and the second element the duplicate factor
+            A :obj:`dict` containing the factors.  The keys are reaction\
+            strings.  The values are two-element :obj:`tuple` objects\
+            with the first element the duplicate factor for the\
+            forward reaction and the second element the duplicate factor\
             for the reverse reaction.
 
         """
@@ -99,7 +100,8 @@ class Reac:
             ``name`` (:obj:`str`): A string giving the reaction.
 
         Returns:
-            A :obj:`bool` with value True if the reaction is a weak reaction and False if not.
+            A :obj:`bool` with value True if the reaction is a weak reaction\
+            and False if not.
 
         """
 

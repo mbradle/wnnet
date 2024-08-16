@@ -63,31 +63,29 @@ def compute_flows(net, t_9, rho, mass_fractions, **kwargs):
     Args:
         ``net``: A wnnet network.
 
-        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which
+        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
           to compute the flows.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
           flows.
 
-        ``mass_fractions`` (:obj:`float`):
-        A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass
+        ``mass_fractions`` (:obj:`float`):\
+        A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
         fractions.
 
-        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
-        to select nuclides for flow computations.  Defaults to all
-        species.
+        ``**kwargs``: Allowed optional keyword arguments:
 
-        ``reac_xpath`` (:obj:`str`, optional): XPath expression
-        to select reactions for flow computations.  Defaults to all
-        reactions.
-
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t_9*), where
-        *t_9* is the temperature in billions of Kelvin and *reaction*
-        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
-        instance.  Other data can be bound to the function.
+           *  **nuc_xpath** (:obj:`str`): XPath expression to select nuclides\
+               for flow computations. Defaults to all species.
+           *  **reac_xpath** (:obj:`str`): XPath expression to select reactions\
+               for flow computations. Defaults to all reactions.
+           *  **user_funcs** (:obj:`dict`): A dictionary of user-defined\
+               functions associated with a user_rate key.\
+               The prototype for each\
+               user rate function should be (*reaction*, *t_9*), where\
+               *t_9* is the temperature in billions of Kelvin and *reaction*\
+               is a `wnutils <https://wnutils.readthedocs.io>`_ reaction\
+               instance.  Other data can be bound to the function.
 
     Returns:
         A :obj:`dict` of reactions with each
@@ -134,22 +132,22 @@ def compute_flows_for_zones(
     Args:
         ``net``: A wnnet network.
 
-        ``zones`` (:obj:`dict`): A dictionary of
+        ``zones`` (:obj:`dict`): A dictionary of\
          `wnutils <https://wnutils.readthedocs.io>`_ *zone data*.
 
-        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
-        to select nuclides for flow computations.  Defaults to all
+        ``nuc_xpath`` (:obj:`str`, optional): XPath expression\
+        to select nuclides for flow computations.  Defaults to all\
         species.
 
-        ``reac_xpath`` (:obj:`str`, optional): XPath expression
-        to select reactions for flow computations.  Defaults to all
+        ``reac_xpath`` (:obj:`str`, optional): XPath expression\
+        to select reactions for flow computations.  Defaults to all\
         reactions.
 
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t_9*, *zone*), where
-        *t_9* is the temperature in billions of Kelvin and *reaction* and
+        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined\
+        functions associated with a user_rate key.\
+        The prototype for each\
+        user rate function should be (*reaction*, *t_9*, *zone*), where\
+        *t_9* is the temperature in billions of Kelvin and *reaction* and\
         *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and
         zone instances.  Other data can be bound to the function.
 
@@ -215,7 +213,7 @@ def _compute_link_flows_for_valid_reactions(
 
         if flow_data.direction in ("forward", "both"):
             forward *= np.power(rho, len(reaction.nuclide_reactants) - 1)
-            forward /= flow_data.dups[reaction][0]
+            forward /= flow_data.dups[reaction.get_string()][0]
 
             for i, source in enumerate(reaction.nuclide_reactants):
                 p_source = _compute_abundance_product(
@@ -243,12 +241,14 @@ def _compute_link_flows_for_valid_reactions(
                             )
                         )
 
-        if not net.is_weak_reaction(reaction) and flow_data.direction in (
+        if not net.is_weak_reaction(
+            reaction.get_string()
+        ) and flow_data.direction in (
             "reverse",
             "both",
         ):
             reverse *= np.power(rho, len(reaction.nuclide_products) - 1)
-            reverse /= flow_data.dups[reaction][1]
+            reverse /= flow_data.dups[reaction.get_string()][1]
 
             for i, source in enumerate(reaction.nuclide_products):
                 p_source = _compute_abundance_product(
@@ -279,7 +279,7 @@ def _compute_link_flows_for_valid_reactions(
         if flow_data.order != "normal":
             tup_array = _swap_tuple_array(tup_array)
 
-        link_flows[reaction] = tup_array
+        link_flows[reaction.get_string()] = tup_array
 
     return link_flows
 
@@ -291,43 +291,40 @@ def compute_link_flows(net, t_9, rho, mass_fractions, **kwargs):
     Args:
         ``net``: A wnnet network.
 
-        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which
+        ``t_9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
           to compute the flows.
 
-        ``rho`` (:obj:`float`):  The density in g/cc at which to compute
+        ``rho`` (:obj:`float`):  The density in g/cc at which to compute\
           the flows.
 
-        ``mass_fractions`` (:obj:`float`):
-          A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass
+        ``mass_fractions`` (:obj:`float`):\
+          A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
           fractions.
 
-        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
-        to select nuclides for flow computations.  Defaults to all
-        species.
+        ``**kwargs``: Allowed optional keyword arguments:
 
-        ``reac_xpath`` (:obj:`str`, optional): XPath expression
-        to select reactions for flow computations.  Defaults to all
-        reactions.
-
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t_9*), where
-        *t_9* is the temperature in billions of Kelvin and *reaction*
-        is a `wnutils <https://wnutils.readthedocs.io>`_ reaction
-        instance.  Other data can be bound to the function.
-
-        ``direction`` (:obj:`str`, optional):  A string indicating the
-          direction of the links ("forward", from reactants to products;
-          "reverse", from products to reactants; "both", both "forward"
-          and "reverse").  Default is "both".
-
-        ``order`` (:obj:`str`, optional):  A string indicating the order
-          of the links.  Default is *normal*, in which the *source* and
-          *target* of the link are in the time-forward direction of the
-          reaction.  For *reversed*, the *source* and *target* are in the
-          opposite of the time-forward direction of the reaction such that
-          the *target* is the *contribution* to the *source* over some interval.
+           *  **nuc_xpath** (:obj:`str`): XPath expression to select nuclides\
+               for flow computations. Defaults to all species.
+           *  **reac_xpath** (:obj:`str`): XPath expression to select reactions\
+               for flow computations. Defaults to all reactions.
+           *  **user_funcs** (:obj:`dict`): A dictionary of user-defined\
+              functions associated with a user_rate key.\
+              The prototype for each\
+              user rate function should be (*reaction*, *t_9*), where\
+              *t_9* is the temperature in billions of Kelvin and *reaction*\
+              is a `wnutils <https://wnutils.readthedocs.io>`_ reaction\
+              instance.  Other data can be bound to the function.
+           *  **direction** (:obj:`str`):  A string indicating the\
+              direction of the links ("forward", from reactants to products;\
+              "reverse", from products to reactants; "both", both "forward"\
+              and "reverse").  Default is "both".
+           *  **order** (:obj:`str`):  A string indicating the order\
+              of the links.  Default is *normal*, in which the *source* and\
+              *target* of the link are in the time-forward direction of the\
+              reaction.  For *reversed*, the *source* and *target* are in the\
+              opposite of the time-forward direction of the reaction such that]\
+              the *target* is the *contribution* to the *source* over some\
+              interval.
 
     Returns:
         A :obj:`dict` of reactions with each
@@ -388,41 +385,36 @@ def compute_link_flows_for_zones(net, zones, **kwargs):
     Args:
         ``net``: A wnnet network.
 
-        ``zones`` (:obj:`dict`): A dictionary of
+        ``zones`` (:obj:`dict`): A dictionary of\
           `wnutils <https://wnutils.readthedocs.io>`_ *zone data*.
 
-        ``nuc_xpath`` (:obj:`str`, optional): XPath expression
-        to select nuclides for flow computations.  Defaults to all
-        species.
+        ``**kwargs``: Allowed optional keyword arguments:
 
-        ``reac_xpath`` (:obj:`str`, optional): XPath expression
-        to select reactions for flow computations.  Defaults to all
-        reactions.
-
-        ``user_funcs`` (:obj:`dict`, optional): A dictionary of user-defined
-        functions associated with a user_rate key.
-        The prototype for each
-        user rate function should be (*reaction*, *t_9*, *zone*), where
-        *t_9* is the temperature in billions of Kelvin and *reaction* and
-        *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and
-        zone instances.  Other data can be bound to the function.
-
-        ``direction`` (:obj:`str`, optional):  A string indicating the
-         direction of the links ("forward", from reactants to products;
-         "reverse", from products to reactants; "both", both "forward" and
-         "reverse").  Default is "both".
-
-
-        ``include_dt`` (:obj:`bool`, optional):  Boolean determining whether
-        to include the *dt* (time interval) in the flow (True) or
-        not (False).  Default is False.
-
-        ``order`` (:obj:`str`, optional):  A string indicating the order of
-          the links.  Default is *normal*, in which the *source* and *target*
-          of the link are in the time-forward direction of the reaction.
-          For *reversed*, the *source* and *target* are in the opposite of
-          the time-forward direction of the reaction such that the *target*
-          is the *contribution* to the *source* over some interval.
+           *  **nuc_xpath** (:obj:`str`): XPath expression to select nuclides\
+               for flow computations. Defaults to all species.
+           *  **reac_xpath** (:obj:`str`): XPath expression to select reactions\
+               for flow computations. Defaults to all reactions.
+           *  **user_funcs** (:obj:`dict`): A dictionary of user-defined\
+              functions associated with a user_rate key.\
+              The prototype for each user rate function should be (*reaction*,\
+              *t_9*, *zone*), where *t_9* is the temperature in billions of\
+              Kelvin and *reaction* and *zone* are\
+              `wnutils <https://wnutils.readthedocs.io>`_ reaction and\
+              zone instances.  Other data can be bound to the function.
+           *  **direction** (:obj:`str`):  A string indicating the\
+              direction of the links ("forward", from reactants to products;\
+              "reverse", from products to reactants; "both", both "forward"\
+              and "reverse").  Default is "both".
+           *  **order** (:obj:`str`):  A string indicating the order\
+              of the links.  Default is *normal*, in which the *source* and\
+              *target* of the link are in the time-forward direction of the\
+              reaction.  For *reversed*, the *source* and *target* are in the\
+              opposite of the time-forward direction of the reaction such that]\
+              the *target* is the *contribution* to the *source* over some\
+              interval.
+           *  **include_dt** (:obj:`bool`):  Boolean determining whether\
+              to include the *dt* (time interval) in the flow (True) or\
+              not (False).  Default is False.
 
     Returns:
         A :obj:`dict` of flow links for each zone.  The data for

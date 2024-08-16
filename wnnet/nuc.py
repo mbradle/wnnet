@@ -10,9 +10,10 @@ class Nuc:
     """A class for handling nuclei and their data.
 
     Args:
-        ``file`` (:obj:`str`): A string giving the XML file name with the nuclide data.
+        ``file`` (:obj:`str`): A string giving the XML file name with the\
+           nuclide data.
 
-        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select
+        ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
         nuclides.  Default is all nuclides.
 
     """
@@ -26,7 +27,7 @@ class Nuc:
         """Method to return a collection of nuclides.
 
         Args:
-            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select
+            ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
              the nuclides.  Default is all species.
 
         Returns:
@@ -44,15 +45,15 @@ class Nuc:
         """Method to compute the nuclear partition function for a species.
 
         Args:
-            ``name`` (:obj:`str`): A string giving the name of the nuclide
+            ``name`` (:obj:`str`): A string giving the name of the nuclide\
             whose partition function should be computed.
 
-            ``t_9`` (:obj:`float`): The temperature in 10\\ :sup:`9` K at which
+            ``t_9`` (:obj:`float`): The temperature in 10\\ :sup:`9` K at which\
             to compute the partition function.
 
         Returns:
-            A :obj:`float` giving the nuclear partition function for the species
-            at the input temperature.
+            A :obj:`float` giving the nuclear partition function for the\
+            species at the input temperature.
 
         """
 
@@ -85,14 +86,14 @@ class Nuc:
         Args:
             ``name`` (:obj:`str`): The name of the species.
 
-            ``t_9`` (:obj:`float`): The temperature in 10\\ :sup:`9` K at which
-             to compute the quantum abundance.
+            ``t_9`` (:obj:`float`): The temperature in 10\\ :sup:`9` K at\
+             which to compute the quantum abundance.
 
-            ``rho`` (:obj:`float`): The density in g/cc  at which to compute
+            ``rho`` (:obj:`float`): The density in g/cc  at which to compute\
             the quantum abundance.
 
         Returns:
-            A :obj:`float` giving the quantum abundance for the species
+            A :obj:`float` giving the quantum abundance for the species\
             at the input conditions.
 
         """

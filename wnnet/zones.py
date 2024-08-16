@@ -7,7 +7,7 @@ class Zones:
     """A class for handling webnucleo zones.
 
     Args:
-        ``file`` (:obj:`str`):  A string giving the XML file name with the
+        ``file`` (:obj:`str`):  A string giving the XML file name with the\
          zone data.
 
     """
@@ -19,11 +19,11 @@ class Zones:
         """Method to return zones.
 
         Args:
-            ``zone_xpath`` (:obj:`str`, optional):  An XPath expression to
+            ``zone_xpath`` (:obj:`str`, optional):  An XPath expression to\
              select zones.  Default is all zones.
 
         Returns:
-            A :obj:`dict` of `wnutils <https://wnutils.readthedocs.io>`_
+            A :obj:`dict` of `wnutils <https://wnutils.readthedocs.io>`_\
              zone data objects.
 
         """
@@ -35,17 +35,17 @@ class Zones:
 
         Args:
 
-            ``file`` (:obj:`str`): A string giving the name of output
+           ``file`` (:obj:`str`): A string giving the name of output\
             xml file.
 
-           ``pretty_print`` (:obj:`bool`, optional): If set to True,
+           ``pretty_print`` (:obj:`bool`, optional): If set to True,\
            routine outputs the xml in nice indented format.
 
-           ``zone_xpath`` (:obj:`str`, optional):  An XPath expression to
+           ``zone_xpath`` (:obj:`str`, optional):  An XPath expression to\
              select zones.  Default is all zones.
 
         Returns:
-            On successful return, the underlying xml has been written
+            On successful return, the underlying xml has been written\
             to ``file``.
 
         """
