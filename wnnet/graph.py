@@ -790,12 +790,11 @@ def _apply_special_node_attributes(my_graph, special_node_attributes):
 
 def _create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
 
-    nuclides = net.get_nuclides()
     reactions = net.get_reactions()
 
     d_g = nx.MultiDiGraph()
 
-    for nuc in nuclides:
+    for nuc in net.get_nuclides():
         d_g.add_node(nuc)
 
     for key, value in my_flows.items():
@@ -1299,19 +1298,16 @@ def create_network_graph(net, **kwargs):
     return sub_graph
 
 
-def _create_integrated_current_graph(net, zone, **my_args):
-    nuclides = net.get_nuclides()
+def _create_integrated_current_graph(
+    net, zone, subset_nuclides, anchors, **my_args
+):
     reactions = net.get_reactions()
-
-    subset_nuclides, anchors = _get_subset_and_anchors(
-        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
-    )
 
     props = zone["properties"]
 
     d_g = nx.MultiDiGraph()
 
-    for nuc in nuclides:
+    for nuc in net.get_nuclides():
         d_g.add_node(nuc)
 
     f_currents = {}
@@ -1467,6 +1463,10 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
 
     result = {}
 
+    subset_nuclides, anchors = _get_subset_and_anchors(
+        net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
+    )
+
     nuc_names = list(net.get_nuclides().keys())
 
     g_names = net.xml.get_graphviz_names(nuc_names)
@@ -1501,6 +1501,8 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
                 g_names=g_names,
             )
 
-        result[key] = _create_integrated_current_graph(net, value, **my_args)
+        result[key] = _create_integrated_current_graph(
+            net, value, subset_nuclides, anchors, **my_args
+        )
 
     return result
