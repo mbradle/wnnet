@@ -4,26 +4,26 @@
 
 The routines in this module allow for a number of optional keyword
 arguments.  Not all keyword arguments are available for each routine,
-however.  The doucmentation indicates which keyword arguments are
+however.  The documentation indicates which keyword arguments are
 appropriate for a given routine.
 
 The possible keyword arguments are:
 
 .. _induced_nuc_xpath:
 
-    * ``induced_nuc_xpath`` (:obj:`str`): An XPath expression to select\
+    ``induced_nuc_xpath`` (:obj:`str`): An XPath expression to select\
         the subset of nuclides in the graph.  The default is all species\
         in the network.
 
 .. _induced_reac_xpath:
 
-    * ``induced_reac_xpath`` (:obj:`str`): An XPath expression to select\
+    ``induced_reac_xpath`` (:obj:`str`): An XPath expression to select\
         the subset of reactions in the graph.  The default is all reactions\
         in the network.
 
 .. _flow_type:
 
-    * ``flow_type`` (:obj:`str`) A string giving the flow type to be\
+    ``flow_type`` (:obj:`str`) A string giving the flow type to be\
         presented.  The possible values are `net`, which shows the forward\
         minus the reverse flow (or the opposite if the reverse flow is larger),\
         and `full`, which shows both the foward and reverse flows.  The\
@@ -31,22 +31,21 @@ The possible keyword arguments are:
 
 .. _direction:
 
-    * ``direction`` (:obj:`str`) A string indicting the reaction directions\
+    ``direction`` (:obj:`str`) A string indicting the reaction directions\
         to show.  Allowed values are `forward`, `reverse`, and `both`\
         (the default, which shows both `forward` and `reverse`).
 
 .. _reaction_color_tuples:
 
-    * ``reaction_color_tuples`` (:obj:`list`): A list of :obj:`tuple` objects\
+    ``reaction_color_tuples`` (:obj:`list`): A list of :obj:`tuple` objects\
         to select arc colors.  There is a tuple for each reaction type.\
-        The first member of the tuple is an XPath\
-        expression to select the reaction type while the second member is a\
-        string giving the color for that reaction type.  The default is that\
-        all arcs are black.
+        The first member of the tuple is an XPath expression to select the\
+        reaction type while the second member is a string giving the color\
+        for that reaction type.  The default is that all arcs are black.
 
 .. _user_funcs:
 
-    * ``user_funcs`` (:obj:`dict`): A dictionary of user-defined\
+    ``user_funcs`` (:obj:`dict`): A dictionary of user-defined\
         functions associated with a user_rate key.  The prototype for each\
         user rate function should be (*reaction*, *t_9*), where\
         *t_9* is the temperature in billions of Kelvin and *reaction*\
@@ -55,38 +54,38 @@ The possible keyword arguments are:
 
 .. _zone_user_funcs:
 
-    *  ``zone_user_funcs`` (:obj:`dict`): A dictionary of user-defined\
+     ``zone_user_funcs`` (:obj:`dict`): A dictionary of user-defined\
         functions associated with a user_rate key.\
         The prototype for each\
         user rate function should be (*reaction*, *t_9*, *zone*), where\
         *t_9* is the temperature in billions of Kelvin and *reaction* and\
         *zone* are `wnutils <https://wnutils.readthedocs.io>`_ reaction and\
-        zone instances.  Other data can be bound to the function.\
+        zone instances.  Other data can be bound to the function.
 
 .. _threshold:
 
-    * ``threshold`` (:obj:`float`):  The minimum flow (relative to the\
+    ``threshold`` (:obj:`float`):  The minimum flow (relative to the\
         maximum flow) to be shown on the graph.  The default is 0.01.
 
 .. _scale:
         
-    * ``scale`` (:obj:`float`):  Scaling factor for the maximum weight arc.\
+    ``scale`` (:obj:`float`):  Scaling factor for the maximum weight arc.\
         The default is 10.
 
 .. _state_scaling:
         
-    * ``state_scaling`` (:obj:`float`):  Scaling factor for isomeric states.\
+    ``state_scaling`` (:obj:`float`):  Scaling factor for isomeric states.\
         The default is 0.35.
 
 .. _allow_isolated_species:
         
-    * ``allow_isolated_species`` (:obj:`bool`):  Boolean to choose whether\
+    ``allow_isolated_species`` (:obj:`bool`):  Boolean to choose whether\
         to allow isolated species (ones without incoming or outgoing arcs)\
         in the graph.  The default is *False*.
 
 .. _title_func:
 
-    * ``title_func``: A\
+    ``title_func``: A\
        `function <https://docs.python.org/3/library/stdtypes.html#functions>`_\
         that applies the title to the graph.  The function must take\
         one :obj:`float` argument giving the maximum flow.\
@@ -96,32 +95,33 @@ The possible keyword arguments are:
 
 .. _zone_title_func:
  
-    *   ``zone_title_func``: A `function \
-        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-        that applies the title to the graph.  The function must take \
+    ``zone_title_func``: A\
+        `function <https://docs.python.org/3/library/stdtypes.html#functions>`_\
+        that applies the title to the graph.  The function must take\
         three arguments.  The first is a :obj:`float` giving the maximum\
         flow.  The second is the zone object corresponding to\
         the graph while the third is the zone label.  Other data can \
         be bound to the function.  The function must return a :obj:`str` \
-        giving the title.  \
-        The default is :meth:`wnnet.graph.make_time_t9_rho_flow_string`
-        for flow graphs and.
-        :meth:`wnnet.graph.make_time_t9_rho_current_string` for integrated
+        giving the title.\
+        The default is :meth:`wnnet.graph.make_time_t9_rho_flow_string`\
+        for flow graphs and\
+        :meth:`wnnet.graph.make_time_t9_rho_current_string` for integrated\
         current graphs.
 
 .. _node_label_func:
         
-    * ``node_label_func``: A `function \
-        <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
-        that applies a label to each node in the graph.  The function \
-        must take as argument a species name.  Other data can be bound to \
-        the function.  The function must return a :obj:`str` \
-        giving the label.  \
-        The default is :meth:`wnnet.graph.make_node_label`.
+    ``node_label_func``: A\
+      `function  <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
+       that applies a label to each node in the graph.  The function\
+       must take as argument a species name.  Other data can be bound to\
+       the function.  The function must return a :obj:`str`\
+       giving the label.\
+       The default is :meth:`wnnet.graph.make_node_label`.  The *g_names*\
+       argument for the default is bound by the calling routine.
 
 .. _zone_node_label_func:
 
-    *  ``zone_node_label_func``: A `function \
+    ``zone_node_label_func``: A `function \
         <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
         that applies a label to each node in the graph.  The function \
         must take as arguments a species name, a zone, and the zone label. \
@@ -132,10 +132,10 @@ The possible keyword arguments are:
 
 .. _scale_edge_weight_func:
         
-    *  ``scale_edge_weight_func``: A `function \
+    ``scale_edge_weight_func``: A `function \
         <https://docs.python.org/3/library/stdtypes.html#functions>`_ \
         that applies scales each edge weight in the graph.  The function \
-        must take as four arguments: a dictionary of edge data, the \
+        must take four arguments: a dictionary of edge data, the \
         maximum edge weight in the scope of the graph, a scale factor \
         by which to scale the weight (input as `scale`_ to this routine), \
         and a threshold for not including the edge in the graph \
@@ -148,36 +148,36 @@ The possible keyword arguments are:
 
 .. _graph_attributes:
         
-    * ``graph_attributes`` (:obj:`dict`):  A dictionary of graphviz attributes\
+    ``graph_attributes`` (:obj:`dict`):  A dictionary of graphviz attributes\
         for the graph.  The default is *{"outputorder": "edgesfirst"}*.
 
 .. _edge_attributes:
         
-    * ``edge_attributes`` (:obj:`dict`):  A dictionary of grapvhiz attributes\
+    ``edge_attributes`` (:obj:`dict`):  A dictionary of grapvhiz attributes\
         for the edges in the graph.  The default is *{"arrowsize": 0.2}*.
 
 .. _node_attributes:
         
-    * ``node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+    ``node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
         attributes for the nodes in the graph.  The default is\
         *{ "shape": "box", "fontsize": 16, "style": "filled",\
          "fillcolor": "white" }*.
 
 .. _solar_species:
 
-    * ``solar_species`` (:obj:`list`):  A list of species to be\
+    ``solar_species`` (:obj:`list`):  A list of species to be\
         considered as the naturally occurring species.  The default is the list\
         returned from :meth:`wnnet.graph.get_solar_species`.
 
 .. _solar_node_attributes:
 
-    * ``solar_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+    ``solar_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
         attributes to be applied to the solar species in the graph.\
         The default is *{"fillcolor": "yellow", "style": "filled"}*.
 
 .. _special_node_attributes:
 
-    * ``special_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+    ``special_node_attributes`` (:obj:`dict`):  A dictionary of graphviz\
         attributes to be applied to the special nodes in the graph.\
         The dictionary has as keys the names of the special nodes and as values\
         a dictionary of graphviz properties to be applied to the given special\
@@ -338,6 +338,9 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
 
     """
 
+    if f_max == 0:
+        return False
+
     keep_edge = True
     _r = edge_data["weight"] / f_max
     if _r >= threshold:
@@ -437,6 +440,11 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
             make_node_label, g_names=g_names
         )
 
+    # Scale edge weight
+
+    if not my_args["scale_edge_weight_func"]:
+        my_args["scale_edge_weight_func"] = scale_edge_weight
+
     return gh.create_flow_graph(
         net, my_flows, subset_nuclides, anchors, **my_args
     )
@@ -456,7 +464,8 @@ def create_zone_flow_graphs(net, zones, **kwargs):
           `induced_nuc_xpath`_, `induced_reac_xpath`_, `flow_type`_,\
           `zone_user_funcs`_, `reaction_color_tuples`_, `threshold`_,\
           `scale`_, `state_scaling`_, `allow_isolated_species`_,\
-          `zone_title_func`_, `zone_node_label_func`_, `scale_edge_weight_func`_,\
+          `zone_title_func`_, `zone_node_label_func`_,\
+          `scale_edge_weight_func`_,\
           `graph_attributes`_, `edge_attributes`_, `node_attributes`_,\
           `solar_species`_, `solar_node_attributes`_, `special_node_attributes`_.
 

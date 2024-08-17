@@ -450,63 +450,30 @@ def apply_solar_node_attributes(
     """Helper method to apply attributes to the nodes representing solar\
        species in a graph."""
 
-    for node in solar_species:
-        if node in my_graph.nodes:
-            for key, value in solar_node_attributes.items():
-                my_graph.nodes[node][key] = value
+    if solar_node_attributes:
+        for node in solar_species:
+            if node in my_graph.nodes:
+                for key, value in solar_node_attributes.items():
+                    my_graph.nodes[node][key] = value
 
 
 def apply_special_node_attributes(my_graph, special_node_attributes):
     """Helper method to apply attributes to special nodes in a graph."""
-    for node in special_node_attributes:
-        for key, value in special_node_attributes[node].items():
-            my_graph.nodes[node][key] = value
+    if special_node_attributes:
+        for node in special_node_attributes:
+            for key, value in special_node_attributes[node].items():
+                my_graph.nodes[node][key] = value
 
 
 def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
     """Helper method to create a flow graph."""
-
-    reactions = net.get_reactions()
 
     d_g = nx.MultiDiGraph()
 
     for nuc in net.get_nuclides():
         d_g.add_node(nuc)
 
-    for key, value in my_flows.items():
-        tup = value
-
-        if my_args["flow_type"] == "full":
-            if tup[0] > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=tup[0], reaction=key
-                        )
-
-            if tup[1] > 0:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=tup[1], reaction=key
-                        )
-
-        elif my_args["flow_type"] == "net":
-            net_flow = tup[0] - tup[1]
-
-            if net_flow > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=net_flow, reaction=key
-                        )
-
-            if net_flow < 0:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=-net_flow, reaction=key
-                        )
+    add_flows_to_graph(net, d_g, my_flows, my_args)
 
     # Apply attributes
 
@@ -522,41 +489,16 @@ def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
 
     apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
-    # Subgraph and maximum flow within subgraph
+    # Subgraph and widths.
 
     sub_graph = nx.subgraph(d_g, subset_nuclides)
 
-    my_weights = nx.get_edge_attributes(sub_graph, "weight")
-
-    # Set penwidth.  Remove edges that are below threshold
-
-    f_max = 0
-
-    if len(my_weights) > 0:
-        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
-
-        remove_edges = []
-        for edge in d_g.edges:
-            if not my_args["scale_edge_weight_func"](
-                d_g.get_edge_data(*edge),
-                f_max,
-                my_args["scale"],
-                my_args["threshold"],
-            ):
-                remove_edges.append(edge)
-
-        d_g.remove_edges_from(remove_edges)
+    f_max = set_widths_and_get_max_weight(d_g, sub_graph, my_args)
 
     # Remove isolated nodes if desired
 
     if not my_args["allow_isolated_species"]:
-        isolated_nodes = list(nx.isolates(d_g))
-        for node in isolated_nodes:
-            if (
-                node not in my_args["solar_species"]
-                and node not in my_args["special_node_attributes"]
-            ):
-                d_g.remove_node(node)
+        remove_isolated_nodes(d_g, my_args)
 
     # Restore anchors
 
@@ -587,35 +529,17 @@ def create_integrated_current_graph(
     net, zone, subset_nuclides, anchors, **my_args
 ):
     """Helper method to create an integrated current graph."""
-    reactions = net.get_reactions()
 
-    props = zone["properties"]
+    # Create graph.
 
     d_g = nx.MultiDiGraph()
+
+    # Add nodes and arcs.
 
     for nuc in net.get_nuclides():
         d_g.add_node(nuc)
 
-    f_currents = {}
-
-    for prop in props:
-        if isinstance(prop, tuple):
-            if prop[0] == "flow current":
-                f_currents[prop[1]] = float(props[prop])
-
-    for key, value in f_currents.items():
-
-        if value > 0:
-            for reactant in reactions[key].nuclide_reactants:
-                for product in reactions[key].nuclide_products:
-                    d_g.add_edge(reactant, product, weight=value, reaction=key)
-
-        if value < 0:
-            for product in reactions[key].nuclide_products:
-                for reactant in reactions[key].nuclide_reactants:
-                    d_g.add_edge(
-                        product, reactant, weight=-value, reaction=key
-                    )
+    add_currents_to_graph(net, zone, d_g)
 
     # Apply attributes
 
@@ -635,37 +559,12 @@ def create_integrated_current_graph(
 
     sub_graph = nx.subgraph(d_g, subset_nuclides)
 
-    my_weights = nx.get_edge_attributes(sub_graph, "weight")
-
-    # Set penwidth.  Remove edges that are below threshold
-
-    f_max = 0
-
-    if len(my_weights) > 0:
-        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
-
-        remove_edges = []
-        for edge in d_g.edges:
-            if not my_args["scale_edge_weight_func"](
-                d_g.get_edge_data(*edge),
-                f_max,
-                my_args["scale"],
-                my_args["threshold"],
-            ):
-                remove_edges.append(edge)
-
-        d_g.remove_edges_from(remove_edges)
+    f_max = set_widths_and_get_max_weight(d_g, sub_graph, my_args)
 
     # Remove isolated nodes if desired
 
     if not my_args["allow_isolated_species"]:
-        isolated_nodes = list(nx.isolates(d_g))
-        for node in isolated_nodes:
-            if (
-                node not in my_args["solar_species"]
-                and node not in my_args["special_node_attributes"]
-            ):
-                d_g.remove_node(node)
+        remove_isolated_nodes(d_g, my_args)
 
     # Restore anchors
 
@@ -707,3 +606,108 @@ def add_reactions_to_graph(net, d_g, my_args):
             for product in value.nuclide_products:
                 for reactant in value.nuclide_reactants:
                     d_g.add_edge(product, reactant, reaction=key)
+
+
+def add_flows_to_graph(net, d_g, my_flows, my_args):
+    """Helper function to add flow arcs to graph."""
+
+    reactions = net.get_reactions()
+
+    for key, value in my_flows.items():
+
+        if my_args["flow_type"] == "full":
+
+            if value[0] > 0:
+                for reactant in reactions[key].nuclide_reactants:
+                    for product in reactions[key].nuclide_products:
+                        d_g.add_edge(
+                            reactant, product, weight=value[0], reaction=key
+                        )
+
+            if value[1] > 0:
+                for product in reactions[key].nuclide_products:
+                    for reactant in reactions[key].nuclide_reactants:
+                        d_g.add_edge(
+                            product, reactant, weight=value[1], reaction=key
+                        )
+
+        if my_args["flow_type"] == "net":
+
+            net_flow = value[0] - value[1]
+
+            if net_flow > 0:
+                for reactant in reactions[key].nuclide_reactants:
+                    for product in reactions[key].nuclide_products:
+                        d_g.add_edge(
+                            reactant, product, weight=net_flow, reaction=key
+                        )
+            else:
+                for product in reactions[key].nuclide_products:
+                    for reactant in reactions[key].nuclide_reactants:
+                        d_g.add_edge(
+                            product, reactant, weight=-net_flow, reaction=key
+                        )
+
+
+def add_currents_to_graph(net, zone, d_g):
+    """Helper function to add current arcs to graph."""
+
+    reactions = net.get_reactions()
+
+    props = zone["properties"]
+
+    f_currents = {}
+
+    for prop in props:
+        if isinstance(prop, tuple):
+            if prop[0] == "flow current":
+                f_currents[prop[1]] = float(props[prop])
+
+    for key, value in f_currents.items():
+        if value > 0:
+            for reactant in reactions[key].nuclide_reactants:
+                for product in reactions[key].nuclide_products:
+                    d_g.add_edge(reactant, product, weight=value, reaction=key)
+        else:
+            for product in reactions[key].nuclide_products:
+                for reactant in reactions[key].nuclide_reactants:
+                    d_g.add_edge(
+                        product, reactant, weight=-value, reaction=key
+                    )
+
+
+def remove_isolated_nodes(d_g, my_args):
+    """Helper function to remove isolated nodes."""
+
+    isolated_nodes = list(nx.isolates(d_g))
+    for node in isolated_nodes:
+        if node not in my_args["solar_species"] and (
+            not my_args["special_node_attributes"]
+            or node not in my_args["special_node_attributes"]
+        ):
+            d_g.remove_node(node)
+
+
+def set_widths_and_get_max_weight(d_g, sub_graph, my_args):
+    """Helper function to set edge widths or remove."""
+
+    my_weights = nx.get_edge_attributes(sub_graph, "weight")
+
+    f_max = 0
+
+    if len(my_weights) > 0:
+        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
+
+        remove_edges = []
+        for edge in d_g.edges:
+            if not my_args["scale_edge_weight_func"](
+                d_g.get_edge_data(*edge),
+                f_max,
+                my_args["scale"],
+                my_args["threshold"],
+            ):
+                remove_edges.append(edge)
+
+        d_g.remove_edges_from(remove_edges)
+
+    return f_max

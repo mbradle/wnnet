@@ -61,13 +61,14 @@ def test_flows():
     t_9 = 1
     rho = 1.0e4
     mass_fractions = {
-        "n": 0.2,
-        "h1": 0.3,
-        "he4": 0.1,
-        "c12": 0.1,
-        "o16": 0.1,
-        "fe56": 0.2,
+        ("n", 0, 1): 0.2,
+        ("h1", 1, 1): 0.3,
+        ("he4", 2, 4): 0.1,
+        ("c12", 6, 12): 0.1,
+        ("o16", 8, 16): 0.1,
+        ("fe56", 26, 56): 0.2,
     }
+
     f = wn.flows.compute_flows(net, t_9, rho, mass_fractions)
     for val in f.values():
         assert len(val) > 0
@@ -129,12 +130,12 @@ def test_graph():
     t_9 = 1
     rho = 1.0e4
     mass_fractions = {
-        "n": 0.2,
-        "h1": 0.3,
-        "he4": 0.1,
-        "c12": 0.1,
-        "o16": 0.1,
-        "fe56": 0.2,
+        ("n", 0, 1): 0.2,
+        ("h1", 1, 1): 0.3,
+        ("he4", 2, 4): 0.1,
+        ("c12", 6, 12): 0.1,
+        ("o16", 8, 16): 0.1,
+        ("fe56", 26, 56): 0.2,
     }
 
     assert wn.graph.create_flow_graph(
