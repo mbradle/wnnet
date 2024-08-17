@@ -185,63 +185,10 @@ The possible keyword arguments are:
 
 """
 
-import operator
-from math import floor, log10
 import functools
 import networkx as nx
 import wnnet.flows as wf
-
-
-def _get_keywords(kw_list, **kwargs):
-
-    for key in kwargs:
-        assert key in kw_list
-
-    def_kwargs = {}
-
-    def_kwargs["induced_nuc_xpath"] = ""
-    def_kwargs["induced_reac_xpath"] = ""
-    def_kwargs["flow_type"] = "net"
-    def_kwargs["direction"] = "both"
-    def_kwargs["reaction_color_tuples"] = None
-    def_kwargs["user_funcs"] = None
-    def_kwargs["zone_user_funcs"] = None
-    def_kwargs["threshold"] = 0.01
-    def_kwargs["scale"] = 10
-    def_kwargs["state_scaling"] = 0.35
-    def_kwargs["allow_isolated_species"] = False
-    def_kwargs["title_func"] = None
-    def_kwargs["zone_title_func"] = None
-    def_kwargs["node_label_func"] = None
-    def_kwargs["zone_node_label_func"] = None
-    def_kwargs["scale_edge_weight_func"] = None
-    def_kwargs["graph_attributes"] = {"outputorder": "edgesfirst"}
-    def_kwargs["node_attributes"] = {
-        "shape": "box",
-        "fontsize": 16,
-        "style": "filled",
-        "fillcolor": "white",
-    }
-    def_kwargs["edge_attributes"] = {"arrowsize": 0.2}
-    def_kwargs["solar_species"] = get_solar_species()
-    def_kwargs["solar_node_attributes"] = {
-        "fillcolor": "yellow",
-        "style": "filled",
-    }
-    def_kwargs["special_node_attributes"] = None
-
-    result = {}
-
-    for k_w in kw_list:
-        if k_w in kwargs:
-            if isinstance(def_kwargs[k_w], dict):
-                result[k_w] = {**def_kwargs[k_w], **kwargs[k_w]}
-            else:
-                result[k_w] = kwargs[k_w]
-        else:
-            result[k_w] = def_kwargs[k_w]
-
-    return result
+import wnnet.graph_helper as gh
 
 
 def get_solar_species():
@@ -253,303 +200,7 @@ def get_solar_species():
 
     """
 
-    return [
-        "h1",
-        "h2",
-        "he3",
-        "he4",
-        "li6",
-        "li7",
-        "be9",
-        "b10",
-        "b11",
-        "c12",
-        "c13",
-        "n14",
-        "n15",
-        "o16",
-        "o17",
-        "o18",
-        "f19",
-        "ne20",
-        "ne21",
-        "ne22",
-        "na23",
-        "mg24",
-        "mg25",
-        "mg26",
-        "al27",
-        "si28",
-        "si29",
-        "si30",
-        "p31",
-        "s32",
-        "s33",
-        "s34",
-        "s36",
-        "cl35",
-        "cl37",
-        "ar36",
-        "ar38",
-        "ar40",
-        "k39",
-        "k40",
-        "k41",
-        "ca40",
-        "ca42",
-        "ca43",
-        "ca44",
-        "ca46",
-        "ca48",
-        "sc45",
-        "ti46",
-        "ti47",
-        "ti48",
-        "ti49",
-        "ti50",
-        "v50",
-        "v51",
-        "cr50",
-        "cr52",
-        "cr53",
-        "cr54",
-        "mn55",
-        "fe54",
-        "fe56",
-        "fe57",
-        "fe58",
-        "co59",
-        "ni58",
-        "ni60",
-        "ni61",
-        "ni62",
-        "ni64",
-        "cu63",
-        "cu65",
-        "zn64",
-        "zn66",
-        "zn67",
-        "zn68",
-        "zn70",
-        "ga69",
-        "ga71",
-        "ge70",
-        "ge72",
-        "ge73",
-        "ge74",
-        "ge76",
-        "as75",
-        "se74",
-        "se76",
-        "se77",
-        "se78",
-        "se80",
-        "se82",
-        "br79",
-        "br81",
-        "kr78",
-        "kr80",
-        "kr82",
-        "kr83",
-        "kr84",
-        "kr86",
-        "rb85",
-        "rb87",
-        "sr84",
-        "sr86",
-        "sr87",
-        "sr88",
-        "y89",
-        "zr90",
-        "zr91",
-        "zr92",
-        "zr94",
-        "zr96",
-        "nb93",
-        "mo92",
-        "mo94",
-        "mo95",
-        "mo96",
-        "mo97",
-        "mo98",
-        "mo100",
-        "ru96",
-        "ru98",
-        "ru99",
-        "ru100",
-        "ru101",
-        "ru102",
-        "ru104",
-        "rh103",
-        "pd102",
-        "pd104",
-        "pd105",
-        "pd106",
-        "pd108",
-        "pd110",
-        "ag107",
-        "ag109",
-        "cd106",
-        "cd108",
-        "cd110",
-        "cd111",
-        "cd112",
-        "cd113",
-        "cd114",
-        "cd116",
-        "in113",
-        "in115",
-        "sn112",
-        "sn114",
-        "sn115",
-        "sn116",
-        "sn117",
-        "sn118",
-        "sn119",
-        "sn120",
-        "sn122",
-        "sn124",
-        "sb121",
-        "sb123",
-        "te120",
-        "te122",
-        "te123",
-        "te124",
-        "te125",
-        "te126",
-        "te128",
-        "te130",
-        "i127",
-        "xe124",
-        "xe126",
-        "xe128",
-        "xe129",
-        "xe130",
-        "xe131",
-        "xe132",
-        "xe134",
-        "xe136",
-        "cs133",
-        "ba130",
-        "ba132",
-        "ba134",
-        "ba135",
-        "ba136",
-        "ba137",
-        "ba138",
-        "la138",
-        "la139",
-        "ce136",
-        "ce138",
-        "ce140",
-        "ce142",
-        "pr141",
-        "nd142",
-        "nd143",
-        "nd144",
-        "nd145",
-        "nd146",
-        "nd148",
-        "nd150",
-        "sm144",
-        "sm147",
-        "sm148",
-        "sm149",
-        "sm150",
-        "sm152",
-        "sm154",
-        "eu151",
-        "eu153",
-        "gd152",
-        "gd154",
-        "gd155",
-        "gd156",
-        "gd157",
-        "gd158",
-        "gd160",
-        "tb159",
-        "dy156",
-        "dy158",
-        "dy160",
-        "dy161",
-        "dy162",
-        "dy163",
-        "dy164",
-        "ho165",
-        "er162",
-        "er164",
-        "er166",
-        "er167",
-        "er168",
-        "er170",
-        "tm169",
-        "yb168",
-        "yb170",
-        "yb171",
-        "yb172",
-        "yb173",
-        "yb174",
-        "yb176",
-        "lu175",
-        "lu176",
-        "hf174",
-        "hf176",
-        "hf177",
-        "hf178",
-        "hf179",
-        "hf180",
-        "ta180",
-        "ta181",
-        "w180",
-        "w182",
-        "w183",
-        "w184",
-        "w186",
-        "re185",
-        "re187",
-        "os184",
-        "os186",
-        "os187",
-        "os188",
-        "os189",
-        "os190",
-        "os192",
-        "ir191",
-        "ir193",
-        "pt190",
-        "pt192",
-        "pt194",
-        "pt195",
-        "pt196",
-        "pt198",
-        "au197",
-        "hg196",
-        "hg198",
-        "hg199",
-        "hg200",
-        "hg201",
-        "hg202",
-        "hg204",
-        "tl203",
-        "tl205",
-        "pb204",
-        "pb206",
-        "pb207",
-        "pb208",
-        "bi209",
-        "th232",
-        "u235",
-        "u238",
-    ]
-
-
-def _fexp(_x):
-    # Add 0.01 for rounding for :.2f mantissa formating
-    return int(floor(log10(abs(_x)) + 0.01)) if _x != 0.0 else 0
-
-
-def _fman(_x):
-    return _x / 10.0 ** _fexp(_x)
+    return gh.get_solar_species_list()
 
 
 def make_time_t9_rho_flow_string(f_max, zone, zone_label):
@@ -574,10 +225,10 @@ def make_time_t9_rho_flow_string(f_max, zone, zone_label):
     t_9 = float(props["t9"])
     rho = float(props["rho"])
 
-    return f"<time (s) = {_fman(time):.2f} x 10<sup>{_fexp(time):d}</sup>, \
+    return f"<time (s) = {gh.fman(time):.2f} x 10<sup>{gh.fexp(time):d}</sup>, \
 T<sub>9</sub> = {t_9:.2f}, \
-rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
-max. flow = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
+rho (g/cc) = {gh.fman(rho):.2f} x 10<sup>{gh.fexp(rho):d}</sup> (g/cc), \
+max. flow = {gh.fman(f_max):.2f} x 10<sup>{gh.fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
 
 
 def make_time_t9_rho_current_string(f_max, zone, zone_label):
@@ -603,10 +254,10 @@ def make_time_t9_rho_current_string(f_max, zone, zone_label):
     t_9 = float(props["t9"])
     rho = float(props["rho"])
 
-    return f"<time (s) = {_fman(time):.2f} x 10<sup>{_fexp(time):d}</sup>, \
+    return f"<time (s) = {gh.fman(time):.2f} x 10<sup>{gh.fexp(time):d}</sup>, \
 T<sub>9</sub> = {t_9:.2f}, \
-rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
-max. int. current = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup>>"
+rho (g/cc) = {gh.fman(rho):.2f} x 10<sup>{gh.fexp(rho):d}</sup> (g/cc), \
+max. int. current = {gh.fman(f_max):.2f} x 10<sup>{gh.fexp(f_max):d}</sup>>"
 
 
 def make_t9_rho_flow_string(f_max, t_9, rho):
@@ -627,8 +278,8 @@ def make_t9_rho_flow_string(f_max, t_9, rho):
     """
 
     return f"<T<sub>9</sub> = {t_9:.2f}, \
-rho (g/cc) = {_fman(rho):.2f} x 10<sup>{_fexp(rho):d}</sup> (g/cc), \
-max. flow = {_fman(f_max):.2f} x 10<sup>{_fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
+rho (g/cc) = {gh.fman(rho):.2f} x 10<sup>{gh.fexp(rho):d}</sup> (g/cc), \
+max. flow = {gh.fman(f_max):.2f} x 10<sup>{gh.fexp(f_max):d}</sup> (s<sup>-1</sup>)>"
 
 
 def make_node_label(name, g_names):
@@ -696,227 +347,6 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
     return keep_edge
 
 
-def _color_edges(my_graph, net, color_tuples):
-    color = {}
-    for reaction in net.get_reactions():
-        color[reaction] = "black"
-
-    if color_tuples:
-        for color_tup in color_tuples:
-            for reaction in net.get_reactions(reac_xpath=color_tup[0]):
-                color[reaction] = color_tup[1]
-
-        for edge in my_graph.edges:
-            my_graph.edges[edge]["color"] = color[
-                my_graph.edges[edge]["reaction"]
-            ]
-
-
-def _get_pos(coll, name, state_scaling):
-    _z, _a, state = coll.xml.get_z_a_state_from_nuclide_name(name)
-    _n = _a - _z
-    if state == "g":
-        _z -= state_scaling
-    elif state == "m":
-        _z += state_scaling
-    return (float(_n), float(_z))
-
-
-def _get_subset_and_anchors(nuclides):
-    species_subset = []
-    my_dict = {}
-    z_dict = {}
-    for key, value in nuclides.items():
-        species_subset.append(key)
-        my_dict[(value["z"], value["a"])] = key
-        if value["z"] not in z_dict:
-            z_dict[value["z"]] = [value["a"]]
-        else:
-            z_dict[value["z"]].append(value["a"])
-
-    z_array = []
-
-    for key, value in z_dict.items():
-        z_array.append(key)
-        value.sort()
-
-    z_array.sort()
-
-    anchors = []
-    anchors.append(my_dict[(z_array[0], z_dict[z_array[0]][0])])
-    anchors.append(my_dict[(z_array[0], z_dict[z_array[0]][-1])])
-    anchors.append(my_dict[(z_array[-1], z_dict[z_array[-1]][0])])
-    anchors.append(my_dict[(z_array[-1], z_dict[z_array[-1]][-1])])
-
-    return (species_subset, anchors)
-
-
-def _apply_graph_attributes(my_graph, graph_attributes):
-    if graph_attributes:
-        for key, value in graph_attributes.items():
-            my_graph.graph[key] = value
-
-
-def _apply_node_attributes(my_graph, node_attributes):
-    if node_attributes:
-        for key, value in node_attributes.items():
-            for node in my_graph.nodes:
-                my_graph.nodes[node][key] = value
-
-
-def _apply_edge_attributes(my_graph, edge_attributes):
-    if edge_attributes:
-        for key, value in edge_attributes.items():
-            for edge in my_graph.edges:
-                my_graph.edges[edge][key] = value
-
-
-def _apply_solar_node_attributes(
-    my_graph, solar_species, solar_node_attributes
-):
-
-    for node in solar_species:
-        if node in my_graph.nodes:
-            for key, value in solar_node_attributes.items():
-                my_graph.nodes[node][key] = value
-
-
-def _apply_special_node_attributes(my_graph, special_node_attributes):
-    if special_node_attributes:
-        for node in special_node_attributes:
-            for key, value in special_node_attributes[node].items():
-                my_graph.nodes[node][key] = value
-
-
-def _create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
-
-    reactions = net.get_reactions()
-
-    d_g = nx.MultiDiGraph()
-
-    for nuc in net.get_nuclides():
-        d_g.add_node(nuc)
-
-    for key, value in my_flows.items():
-        tup = value
-
-        if my_args["flow_type"] == "full":
-            if tup[0] > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=tup[0], reaction=key
-                        )
-
-            if tup[1] > 0:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=tup[1], reaction=key
-                        )
-
-        elif my_args["flow_type"] == "net":
-            net_flow = tup[0] - tup[1]
-
-            if net_flow > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=net_flow, reaction=key
-                        )
-
-            if net_flow < 0:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=-net_flow, reaction=key
-                        )
-
-    # Apply attributes
-
-    _apply_graph_attributes(d_g, my_args["graph_attributes"])
-
-    _apply_node_attributes(d_g, my_args["node_attributes"])
-
-    _apply_edge_attributes(d_g, my_args["edge_attributes"])
-
-    _apply_solar_node_attributes(
-        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
-    )
-
-    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
-
-    # Subgraph and maximum flow within subgraph
-
-    sub_graph = nx.subgraph(d_g, subset_nuclides)
-
-    my_weights = nx.get_edge_attributes(sub_graph, "weight")
-
-    # Set penwidth.  Remove edges that are below threshold
-
-    f_max = 0
-
-    if len(my_weights) > 0:
-        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
-
-        if not my_args["scale_edge_weight_func"]:
-            _scale_edge_weight_func = functools.partial(
-                scale_edge_weight,
-                f_max=f_max,
-                scale=my_args["scale"],
-                threshold=my_args["threshold"],
-            )
-        else:
-            _scale_edge_weight_func = functools.partial(
-                my_args["scale_edge_weight_func"],
-                f_max=f_max,
-                scale=my_args["scale"],
-                threshold=my_args["threshold"],
-            )
-
-        remove_edges = []
-        for edge in d_g.edges:
-            if not _scale_edge_weight_func(d_g.get_edge_data(*edge)):
-                remove_edges.append(edge)
-
-        d_g.remove_edges_from(remove_edges)
-
-    # Remove isolated nodes if desired
-
-    if not my_args["allow_isolated_species"]:
-        isolated_nodes = list(nx.isolates(d_g))
-        for node in isolated_nodes:
-            if (
-                node not in my_args["solar_species"]
-                and node not in my_args["special_node_attributes"]
-            ):
-                d_g.remove_node(node)
-
-    # Restore anchors
-
-    for anchor in anchors:
-        if anchor not in d_g.nodes:
-            d_g.add_node(anchor, style="invis")
-
-    # Get new subset
-
-    sub_graph_2 = nx.subgraph(d_g, subset_nuclides)
-
-    for node in sub_graph_2.nodes:
-        sub_graph_2.nodes[node]["pos"] = _get_pos(
-            net, node, my_args["state_scaling"]
-        )
-        sub_graph_2.nodes[node]["label"] = my_args["node_label_func"](node)
-
-    # Title
-
-    d_g.graph["label"] = my_args["title_func"](f_max)
-
-    _color_edges(sub_graph_2, net, my_args["reaction_color_tuples"])
-
-    return sub_graph_2
-
-
 def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
     """A routine to create a flow graph for a given set of mass fractions at
        the input temperature and density.
@@ -973,7 +403,7 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
         "special_node_attributes",
     ]
 
-    my_args = _get_keywords(my_list, **kwargs)
+    my_args = gh.get_keywords(my_list, **kwargs)
 
     assert my_args["flow_type"] in ("net", "full")
 
@@ -988,7 +418,7 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    subset_nuclides, anchors = _get_subset_and_anchors(
+    subset_nuclides, anchors = gh.get_subset_and_anchors(
         net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
     )
 
@@ -1007,7 +437,7 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
             make_node_label, g_names=g_names
         )
 
-    return _create_flow_graph(
+    return gh.create_flow_graph(
         net, my_flows, subset_nuclides, anchors, **my_args
     )
 
@@ -1059,7 +489,7 @@ def create_zone_flow_graphs(net, zones, **kwargs):
         "special_node_attributes",
     ]
 
-    my_args = _get_keywords(my_list, **kwargs)
+    my_args = gh.get_keywords(my_list, **kwargs)
 
     result = {}
 
@@ -1070,11 +500,14 @@ def create_zone_flow_graphs(net, zones, **kwargs):
         user_funcs=my_args["zone_user_funcs"],
     )
 
-    subset_nuclides, anchors = _get_subset_and_anchors(
+    subset_nuclides, anchors = gh.get_subset_and_anchors(
         net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
     )
 
     g_names = net.xml.get_graphviz_names(subset_nuclides)
+
+    if not my_args["scale_edge_weight_func"]:
+        my_args["scale_edge_weight_func"] = scale_edge_weight
 
     # Loop on zones
 
@@ -1107,7 +540,7 @@ def create_zone_flow_graphs(net, zones, **kwargs):
 
         # Create graph
 
-        result[key] = _create_flow_graph(
+        result[key] = gh.create_flow_graph(
             net, my_flows[key], subset_nuclides, anchors, **my_args
         )
 
@@ -1145,7 +578,7 @@ def create_nuclides_graph(nuc, **kwargs):
         "special_node_attributes",
     ]
 
-    my_args = _get_keywords(my_list, **kwargs)
+    my_args = gh.get_keywords(my_list, **kwargs)
 
     d_g = nx.MultiDiGraph()
 
@@ -1154,15 +587,15 @@ def create_nuclides_graph(nuc, **kwargs):
 
     # Apply attributes
 
-    _apply_graph_attributes(d_g, my_args["graph_attributes"])
+    gh.apply_graph_attributes(d_g, my_args["graph_attributes"])
 
-    _apply_node_attributes(d_g, my_args["node_attributes"])
+    gh.apply_node_attributes(d_g, my_args["node_attributes"])
 
-    _apply_solar_node_attributes(
+    gh.apply_solar_node_attributes(
         d_g, my_args["solar_species"], my_args["solar_node_attributes"]
     )
 
-    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
+    gh.apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
     # Node label
 
@@ -1173,7 +606,9 @@ def create_nuclides_graph(nuc, **kwargs):
         _node_label_func = functools.partial(make_node_label, g_names=g_names)
 
     for node in d_g.nodes:
-        d_g.nodes[node]["pos"] = _get_pos(nuc, node, my_args["state_scaling"])
+        d_g.nodes[node]["pos"] = gh.get_pos(
+            nuc, node, my_args["state_scaling"]
+        )
         d_g.nodes[node]["label"] = _node_label_func(node)
 
     return d_g
@@ -1219,50 +654,42 @@ def create_network_graph(net, **kwargs):
         "special_node_attributes",
     ]
 
-    my_args = _get_keywords(my_list, **kwargs)
+    my_args = gh.get_keywords(my_list, **kwargs)
 
     assert my_args["direction"] in ("forward", "reverse", "both")
 
     nuclides = net.get_nuclides()
-    reactions = net.get_reactions(reac_xpath=my_args["induced_reac_xpath"])
 
     # Get the subset of nuclides to view in the graph.  Get anchors.
 
-    val, anchors = _get_subset_and_anchors(
+    val, anchors = gh.get_subset_and_anchors(
         net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
     )
 
     d_g = nx.MultiDiGraph()
 
+    # Add nodes.
+
     for nuc in nuclides:
         d_g.add_node(nuc)
 
-    for key, value in reactions.items():
-        if my_args["direction"] in ("forward", "both"):
-            for reactant in value.nuclide_reactants:
-                for product in value.nuclide_products:
-                    d_g.add_edge(reactant, product, reaction=key)
+    # Add arcs (reactions).
 
-        if not net.is_weak_reaction(key) and (
-            my_args["direction"] in ("reverse", "both")
-        ):
-            for product in value.nuclide_products:
-                for reactant in value.nuclide_reactants:
-                    d_g.add_edge(product, reactant, reaction=key)
+    gh.add_reactions_to_graph(net, d_g, my_args)
 
     # Apply attributes
 
-    _apply_graph_attributes(d_g, my_args["graph_attributes"])
+    gh.apply_graph_attributes(d_g, my_args["graph_attributes"])
 
-    _apply_node_attributes(d_g, my_args["node_attributes"])
+    gh.apply_node_attributes(d_g, my_args["node_attributes"])
 
-    _apply_edge_attributes(d_g, my_args["edge_attributes"])
+    gh.apply_edge_attributes(d_g, my_args["edge_attributes"])
 
-    _apply_solar_node_attributes(
+    gh.apply_solar_node_attributes(
         d_g, my_args["solar_species"], my_args["solar_node_attributes"]
     )
 
-    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
+    gh.apply_special_node_attributes(d_g, my_args["special_node_attributes"])
 
     # Remove isolated nodes if desired
 
@@ -1288,130 +715,14 @@ def create_network_graph(net, **kwargs):
         _node_label_func = functools.partial(make_node_label, g_names=g_names)
 
     for node in sub_graph.nodes:
-        sub_graph.nodes[node]["pos"] = _get_pos(
+        sub_graph.nodes[node]["pos"] = gh.get_pos(
             net, node, my_args["state_scaling"]
         )
         sub_graph.nodes[node]["label"] = _node_label_func(node)
 
-    _color_edges(sub_graph, net, my_args["reaction_color_tuples"])
+    gh.color_edges(sub_graph, net, my_args["reaction_color_tuples"])
 
     return sub_graph
-
-
-def _create_integrated_current_graph(
-    net, zone, subset_nuclides, anchors, **my_args
-):
-    reactions = net.get_reactions()
-
-    props = zone["properties"]
-
-    d_g = nx.MultiDiGraph()
-
-    for nuc in net.get_nuclides():
-        d_g.add_node(nuc)
-
-    f_currents = {}
-
-    for prop in props:
-        if isinstance(prop, tuple):
-            if prop[0] == "flow current":
-                f_currents[prop[1]] = float(props[prop])
-
-    for key, value in f_currents.items():
-
-        if value > 0:
-            for reactant in reactions[key].nuclide_reactants:
-                for product in reactions[key].nuclide_products:
-                    d_g.add_edge(reactant, product, weight=value, reaction=key)
-
-        if value < 0:
-            for product in reactions[key].nuclide_products:
-                for reactant in reactions[key].nuclide_reactants:
-                    d_g.add_edge(
-                        product, reactant, weight=-value, reaction=key
-                    )
-
-    # Apply attributes
-
-    _apply_graph_attributes(d_g, my_args["graph_attributes"])
-
-    _apply_node_attributes(d_g, my_args["node_attributes"])
-
-    _apply_edge_attributes(d_g, my_args["edge_attributes"])
-
-    _apply_solar_node_attributes(
-        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
-    )
-
-    _apply_special_node_attributes(d_g, my_args["special_node_attributes"])
-
-    # Subgraph and maximum flow within subgraph
-
-    sub_graph = nx.subgraph(d_g, subset_nuclides)
-
-    my_weights = nx.get_edge_attributes(sub_graph, "weight")
-
-    # Set penwidth.  Remove edges that are below threshold
-
-    f_max = 0
-
-    if len(my_weights) > 0:
-        f_max = max(my_weights.items(), key=operator.itemgetter(1))[1]
-
-        if not my_args["scale_edge_weight_func"]:
-            _scale_edge_weight_func = functools.partial(
-                scale_edge_weight,
-                f_max=f_max,
-                scale=my_args["scale"],
-                threshold=my_args["threshold"],
-            )
-        else:
-            _scale_edge_weight_func = functools.partial(
-                my_args["scale_edge_weight_func"],
-                f_max=f_max,
-                scale=my_args["scale"],
-                threshold=my_args["threshold"],
-            )
-
-        remove_edges = []
-        for edge in d_g.edges:
-            if not _scale_edge_weight_func(d_g.get_edge_data(*edge)):
-                remove_edges.append(edge)
-
-        d_g.remove_edges_from(remove_edges)
-
-    # Remove isolated nodes if desired
-
-    if not my_args["allow_isolated_species"]:
-        isolated_nodes = list(nx.isolates(d_g))
-        for node in isolated_nodes:
-            if (
-                node not in my_args["solar_species"]
-                and node not in my_args["special_node_attributes"]
-            ):
-                d_g.remove_node(node)
-
-    # Restore anchors
-
-    for anchor in anchors:
-        if anchor not in d_g.nodes:
-            d_g.add_node(anchor, style="invis")
-
-    # Get new subset
-
-    sub_graph_2 = nx.subgraph(d_g, subset_nuclides)
-
-    for node in sub_graph_2.nodes:
-        sub_graph_2.nodes[node]["pos"] = _get_pos(
-            net, node, my_args["state_scaling"]
-        )
-        sub_graph_2.nodes[node]["label"] = my_args["node_label_func"](node)
-
-    d_g.graph["label"] = my_args["title_func"](f_max)
-
-    _color_edges(sub_graph_2, net, my_args["reaction_color_tuples"])
-
-    return sub_graph_2
 
 
 def create_zone_integrated_current_graphs(net, zones, **kwargs):
@@ -1459,17 +770,18 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
         "special_node_attributes",
     ]
 
-    my_args = _get_keywords(my_list, **kwargs)
+    my_args = gh.get_keywords(my_list, **kwargs)
 
     result = {}
 
-    subset_nuclides, anchors = _get_subset_and_anchors(
+    subset_nuclides, anchors = gh.get_subset_and_anchors(
         net.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"])
     )
 
-    nuc_names = list(net.get_nuclides().keys())
+    g_names = net.xml.get_graphviz_names(list(net.get_nuclides().keys()))
 
-    g_names = net.xml.get_graphviz_names(nuc_names)
+    if not my_args["scale_edge_weight_func"]:
+        my_args["scale_edge_weight_func"] = scale_edge_weight
 
     for key, value in zones.items():
 
@@ -1501,7 +813,7 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
                 g_names=g_names,
             )
 
-        result[key] = _create_integrated_current_graph(
+        result[key] = gh.create_integrated_current_graph(
             net, value, subset_nuclides, anchors, **my_args
         )
 
