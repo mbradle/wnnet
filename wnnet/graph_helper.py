@@ -656,6 +656,7 @@ def add_flows_to_graph(net, d_g, my_flows, my_args):
                     key,
                 )
 
+
 def add_currents_to_graph(net, zone, d_g):
     """Helper function to add current arcs to graph."""
 
