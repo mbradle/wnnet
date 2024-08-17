@@ -21,6 +21,7 @@ jobs:
       - name: run linter
         run: |
           pylint --disable=C0103 wnnet/consts.py
-          pylint wnnet/__about__.py wnnet/__init__.py wnnet/flows.py wnnet/graph.py wnnet/net.py wnnet/nuc.py wnnet/reac.py wnnet/zones.py
-          pylint ----max-branches 15  wnnet/graph_helper.py
+          pylint wnnet/__about__.py wnnet/__init__.py wnnet/flows.py \
+              wnnet/graph.py wnnet/graph_helper.py wnnet/net.py \
+              wnnet/nuc.py wnnet/reac.py wnnet/zones.py
 

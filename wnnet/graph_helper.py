@@ -618,36 +618,43 @@ def add_flows_to_graph(net, d_g, my_flows, my_args):
         if my_args["flow_type"] == "full":
 
             if value[0] > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=value[0], reaction=key
-                        )
+                add_flow_edges(
+                    d_g,
+                    reactions[key].nuclide_reactants,
+                    reactions[key].products,
+                    value[0],
+                    key,
+                )
 
             if value[1] > 0:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=value[1], reaction=key
-                        )
+                add_flow_edges(
+                    d_g,
+                    reactions[key].nuclide_products,
+                    reactions[key].reactants,
+                    value[1],
+                    key,
+                )
 
         if my_args["flow_type"] == "net":
 
             net_flow = value[0] - value[1]
 
             if net_flow > 0:
-                for reactant in reactions[key].nuclide_reactants:
-                    for product in reactions[key].nuclide_products:
-                        d_g.add_edge(
-                            reactant, product, weight=net_flow, reaction=key
-                        )
+                add_flow_edges(
+                    d_g,
+                    reactions[key].nuclide_reactants,
+                    reactions[key].products,
+                    net_flow,
+                    key,
+                )
             else:
-                for product in reactions[key].nuclide_products:
-                    for reactant in reactions[key].nuclide_reactants:
-                        d_g.add_edge(
-                            product, reactant, weight=-net_flow, reaction=key
-                        )
-
+                add_flow_edges(
+                    d_g,
+                    reactions[key].nuclide_products,
+                    reactions[key].reactants,
+                    -net_flow,
+                    key,
+                )
 
 def add_currents_to_graph(net, zone, d_g):
     """Helper function to add current arcs to graph."""
@@ -711,3 +718,11 @@ def set_widths_and_get_max_weight(d_g, sub_graph, my_args):
         d_g.remove_edges_from(remove_edges)
 
     return f_max
+
+
+def add_flow_edges(d_g, s_array, t_array, my_weight, my_key):
+    """Helper function to add flow edges."""
+
+    for source in s_array:
+        for target in t_array:
+            d_g.add_edge(source, target, weight=my_weight, reaction=my_key)
