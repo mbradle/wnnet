@@ -44,6 +44,7 @@ def get_keywords(kw_list, **kwargs):
         "style": "filled",
     }
     def_kwargs["special_node_attributes"] = None
+    def_kwargs["special_edge_attributes"] = None
 
     result = {}
 
@@ -364,9 +365,10 @@ def color_edges(my_graph, net, color_tuples):
                 color[reaction] = color_tup[1]
 
         for edge in my_graph.edges:
-            my_graph.edges[edge]["color"] = color[
-                my_graph.edges[edge]["reaction"]
-            ]
+            if not "color" in my_graph.edges[edge]:
+                my_graph.edges[edge]["color"] = color[
+                    my_graph.edges[edge]["reaction"]
+                ]
 
 
 def fexp(_x):
@@ -465,6 +467,39 @@ def apply_special_node_attributes(my_graph, special_node_attributes):
                 my_graph.nodes[node][key] = value
 
 
+def check_special_edges_for_reaction(net, special_edge_attributes):
+    """Helper method to check for reaction in special edges."""
+    reactions = net.get_reactions()
+    for edge in special_edge_attributes:
+        assert special_edge_attributes[edge]["reaction"] in reactions
+
+
+def set_edge_attribute(my_graph, edge, reaction, key, value):
+    """Helper method to set attribute in multidigraph by reaction."""
+    for _n in range(my_graph.number_of_edges(*edge)):
+        if my_graph.edges[*edge, _n]["reaction"] == reaction:
+            my_graph.edges[*edge, _n][key] = value
+
+
+def apply_special_edge_attributes(my_graph, special_edge_attributes):
+    """Helper method to apply attributes to special edges in a graph."""
+    if special_edge_attributes:
+        for edge in special_edge_attributes:
+            assert "reaction" in special_edge_attributes[edge]
+            if not my_graph.has_edge(*edge):
+                my_graph.add_edge(
+                    *edge, reaction=special_edge_attributes[edge]["reaction"]
+                )
+            for key, value in special_edge_attributes[edge].items():
+                set_edge_attribute(
+                    my_graph,
+                    edge,
+                    special_edge_attributes[edge]["reaction"],
+                    key,
+                    value,
+                )
+
+
 def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
     """Helper method to create a flow graph."""
 
@@ -494,6 +529,15 @@ def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
     sub_graph = nx.subgraph(d_g, subset_nuclides)
 
     f_max = set_widths_and_get_max_weight(d_g, sub_graph, my_args)
+
+    # Apply special edge attributes after scaling.
+
+    if my_args["special_edge_attributes"]:
+        check_special_edges_for_reaction(
+            net, my_args["special_edge_attributes"]
+        )
+
+    apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 
     # Remove isolated nodes if desired
 
@@ -560,6 +604,15 @@ def create_integrated_current_graph(
     sub_graph = nx.subgraph(d_g, subset_nuclides)
 
     f_max = set_widths_and_get_max_weight(d_g, sub_graph, my_args)
+
+    # Apply special edge attributes after scaiing.
+
+    if my_args["special_edge_attributes"]:
+        check_special_edges_for_reaction(
+            net, my_args["special_edge_attributes"]
+        )
+
+    apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 
     # Remove isolated nodes if desired
 

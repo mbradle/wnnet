@@ -100,16 +100,21 @@ def test_graph():
     }
     my_edge_attributes = {"penwidth": 2}
     my_node_attributes = {"style": "filled", "fillcolor": "bisque"}
-    my_special_attributes = {
+    my_special_node_attributes = {
         "fe56": {"fillcolor": "green", "shape": "oval", "style": "filled"}
     }
+    my_special_edge_attributes = {
+        ("fe56", "fe57"): {"color": "blue", "penwidth": 2,
+         "reaction": "n + fe56 -> fe57 + gamma"}
+    }
+    
 
     assert wn.graph.create_nuclides_graph(
         nuc,
         induced_nuc_xpath=my_induced_nuc_xpath,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
-        special_node_attributes=my_special_attributes,
+        special_node_attributes=my_special_node_attributes,
     )
 
     my_color_tuples = [
@@ -124,7 +129,8 @@ def test_graph():
         reaction_color_tuples = my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
-        special_node_attributes=my_special_attributes,
+        special_node_attributes=my_special_node_attributes,
+        special_edge_attributes=my_special_edge_attributes,
     )
 
     t_9 = 1
@@ -148,7 +154,8 @@ def test_graph():
         reaction_color_tuples = my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
-        special_node_attributes=my_special_attributes,
+        special_node_attributes=my_special_node_attributes,
+        special_edge_attributes=my_special_edge_attributes,
     )
 
     my_graphs = wn.graph.create_zone_flow_graphs(
@@ -159,7 +166,8 @@ def test_graph():
         reaction_color_tuples = my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
-        special_node_attributes=my_special_attributes,
+        special_node_attributes=my_special_node_attributes,
+        special_edge_attributes=my_special_edge_attributes,
     )
     for graph in my_graphs.values():
         assert graph
@@ -172,7 +180,8 @@ def test_graph():
         reaction_color_tuples = my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
-        special_node_attributes=my_special_attributes,
+        special_node_attributes=my_special_node_attributes,
+        special_edge_attributes=my_special_edge_attributes,
     )
     for graph in my_graphs.values():
         assert graph

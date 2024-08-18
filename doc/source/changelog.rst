@@ -4,6 +4,20 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.0.0
+-------------
+
+New:
+
+  * A number of method prototypes have been altered.  These are
+    backwards-incompatible changes.
+  * Linting and testing have been added.
+
+Internal:
+
+  * A number of internal changes have been made to improve the linting
+    score.
+
 Version 1.2.6
 -------------
 

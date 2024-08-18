@@ -183,6 +183,20 @@ The possible keyword arguments are:
         a dictionary of graphviz properties to be applied to the given special\
         node.
 
+.. _special_edge_attributes:
+
+    ``special_edge_attributes`` (:obj:`dict`):  A dictionary of graphviz\
+        attributes to be applied to the special edges in the graph.\
+        The dictionary has as keys a :obj:`tuple` *(u, v)*, where *u* is the\
+        source of rhe directed edge and *v* is the target.  The value of\
+        each dictionary is\
+        a dictionary of graphviz properties to be applied to the given special\
+        edge.  The dictionary of properties for a special edge must include\
+        an entry with key being *reaction* and the value being the\
+        string of a valid reaction in the network.  This is to enable\
+        selection of the proper arc in the network multi-digraph.
+
+
 """
 
 import functools
@@ -341,6 +355,9 @@ def scale_edge_weight(edge_data, f_max, scale, threshold):
     if f_max == 0:
         return False
 
+    if "penwidth" in edge_data:
+        return True
+
     keep_edge = True
     _r = edge_data["weight"] / f_max
     if _r >= threshold:
@@ -374,7 +391,8 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
           `state_scaling`_, `allow_isolated_species`_, `title_func`_,\
           `node_label_func`_, `scale_edge_weight_func`_, `graph_attributes`_,\
           `edge_attributes`_, `node_attributes`_, `solar_species`_,\
-          `solar_node_attributes`_, `special_node_attributes`_.
+          `solar_node_attributes`_, `special_node_attributes`_,\
+          `special_edge_attributes`_.
 
 
     Returns:
@@ -404,6 +422,7 @@ def create_flow_graph(net, t_9, rho, mass_fractions, **kwargs):
         "solar_species",
         "solar_node_attributes",
         "special_node_attributes",
+        "special_edge_attributes",
     ]
 
     my_args = gh.get_keywords(my_list, **kwargs)
@@ -467,7 +486,8 @@ def create_zone_flow_graphs(net, zones, **kwargs):
           `zone_title_func`_, `zone_node_label_func`_,\
           `scale_edge_weight_func`_,\
           `graph_attributes`_, `edge_attributes`_, `node_attributes`_,\
-          `solar_species`_, `solar_node_attributes`_, `special_node_attributes`_.
+          `solar_species`_, `solar_node_attributes`_,\
+          `special_node_attributes`_, `special_edge_attributes`_.
 
     Returns:
         A :obj:`dict` of\
@@ -496,6 +516,7 @@ def create_zone_flow_graphs(net, zones, **kwargs):
         "solar_species",
         "solar_node_attributes",
         "special_node_attributes",
+        "special_edge_attributes",
     ]
 
     my_args = gh.get_keywords(my_list, **kwargs)
@@ -566,7 +587,7 @@ def create_nuclides_graph(nuc, **kwargs):
           :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
           `induced_nuc_xpath`_, `state_scaling`_, `node_label_func`_,\
           `graph_attributes`_, `node_attributes`_, `solar_species`_,\
-          `solar_node_attributes`_, and `special_node_attributes`_.
+          `solar_node_attributes`_, `special_node_attributes`_.
 
     Returns:
         A \
@@ -636,7 +657,8 @@ def create_network_graph(net, **kwargs):
           `reaction_color_tuples`_, `threshold`_, `scale`_, `state_scaling`_,\
           `allow_isolated_species`_, `node_label_func`_, `graph_attributes`_,\
           `edge_attributes`_, `node_attributes`_, `solar_species`_,\
-          `solar_node_attributes`_, `special_node_attributes`_.
+          `solar_node_attributes`_, `special_node_attributes`_,\
+          `special_edge_attributes`_.
 
     Returns:
         A `networkx multidigraph \
@@ -661,6 +683,7 @@ def create_network_graph(net, **kwargs):
         "solar_species",
         "solar_node_attributes",
         "special_node_attributes",
+        "special_edge_attributes",
     ]
 
     my_args = gh.get_keywords(my_list, **kwargs)
@@ -699,6 +722,13 @@ def create_network_graph(net, **kwargs):
     )
 
     gh.apply_special_node_attributes(d_g, my_args["special_node_attributes"])
+
+    if my_args["special_edge_attributes"]:
+        gh.check_special_edges_for_reaction(
+            net, my_args["special_edge_attributes"]
+        )
+
+    gh.apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 
     # Remove isolated nodes if desired
 
@@ -751,7 +781,7 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
           `zone_node_label_func`_,\
           `scale_edge_weight_func`_, `graph_attributes`_, `edge_attributes`_,\
           `node_attributes`_, `solar_species`_, `solar_node_attributes`_,\
-          `special_node_attributes`_.
+          `special_node_attributes`_, `special_edge_attributes`_.
 
     Returns:
         A :obj:`dict` of `networkx multidigraphs \
@@ -777,6 +807,7 @@ def create_zone_integrated_current_graphs(net, zones, **kwargs):
         "solar_species",
         "solar_node_attributes",
         "special_node_attributes",
+        "special_edge_attributes",
     ]
 
     my_args = gh.get_keywords(my_list, **kwargs)
