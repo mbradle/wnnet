@@ -577,73 +577,6 @@ def create_zone_flow_graphs(net, zones, **kwargs):
     return result
 
 
-def create_nuclides_graph(nuc, **kwargs):
-    """A routine to create a graph showing species.
-
-    Args:
-        ``nuc``: A wnnet nuclide object.
-
-        ``**kwargs``: The allowed optional\
-          :ref:`keyword <Allowed_keywords>` arguments for this routine are:\
-          `induced_nuc_xpath`_, `state_scaling`_, `node_label_func`_,\
-          `graph_attributes`_, `node_attributes`_, `solar_species`_,\
-          `solar_node_attributes`_, `special_node_attributes`_.
-
-    Returns:
-        A \
-       `networkx multidigraph \
-        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_\
-        showing the nuclides.
-     
-    """
-
-    my_list = [
-        "induced_nuc_xpath",
-        "state_scaling",
-        "node_label_func",
-        "graph_attributes",
-        "node_attributes",
-        "solar_species",
-        "solar_node_attributes",
-        "special_node_attributes",
-    ]
-
-    my_args = gh.get_keywords(my_list, **kwargs)
-
-    d_g = nx.MultiDiGraph()
-
-    for species in nuc.get_nuclides(nuc_xpath=my_args["induced_nuc_xpath"]):
-        d_g.add_node(species)
-
-    # Apply attributes
-
-    gh.apply_graph_attributes(d_g, my_args["graph_attributes"])
-
-    gh.apply_node_attributes(d_g, my_args["node_attributes"])
-
-    gh.apply_solar_node_attributes(
-        d_g, my_args["solar_species"], my_args["solar_node_attributes"]
-    )
-
-    gh.apply_special_node_attributes(d_g, my_args["special_node_attributes"])
-
-    # Node label
-
-    if my_args["node_label_func"]:
-        _node_label_func = my_args["node_label_func"]
-    else:
-        g_names = nuc.xml.get_graphviz_names(list(d_g.nodes.keys()))
-        _node_label_func = functools.partial(make_node_label, g_names=g_names)
-
-    for node in d_g.nodes:
-        d_g.nodes[node]["pos"] = gh.get_pos(
-            nuc, node, my_args["state_scaling"]
-        )
-        d_g.nodes[node]["label"] = _node_label_func(node)
-
-    return d_g
-
-
 def create_network_graph(net, **kwargs):
     """A routine to create a network graph showing species and reactions\
        among them.
@@ -733,7 +666,7 @@ def create_network_graph(net, **kwargs):
     # Remove isolated nodes if desired
 
     if not my_args["allow_isolated_species"]:
-        d_g.remove_nodes_from(list(nx.isolates(d_g)))
+        gh.remove_isolated_nodes(d_g, my_args)
 
     # Restore anchors
 
