@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Meyer"
+  given-names: "Bradley Stewart"
+  orcid: "https://orcid.org/0000-0001-6307-9818"
+- family-names: "Li"
+  given-names: "Mengke"
+  orcid: "https://orcid.org/0000-0002-6373-7494"
+title: "grrproc"
+version: 2.0.0
+doi: 10.5281/zenodo.13338379
+date-released: 2024-08-19
+url: "https://github.com/mbradle/wnnet"

@@ -9,14 +9,14 @@ Version 2.0.0
 
 New:
 
-  * A number of method prototypes have been altered.  These are
+  * A number of method and function prototypes have been altered.  These are
     backwards-incompatible changes.
   * Linting and testing have been added.
 
 Internal:
 
-  * A number of internal changes have been made to improve the linting
-    score.
+  * A number of internal changes have been made to improve code operation and
+    readability.
 
 Version 1.2.6
 -------------
