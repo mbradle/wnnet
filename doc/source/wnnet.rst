@@ -30,6 +30,14 @@ wnnet.graph module
    :undoc-members:
    :show-inheritance:
 
+wnnet.graph_helper module
+-------------------------
+
+.. automodule:: wnnet.graph_helper
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 wnnet.net module
 ----------------
 

@@ -1,5 +1,6 @@
 """Module that holds helper routines for the graph module.  This module
-is not intended to be public."""
+is not part of the wnnet API.  This documentation is shown simply for
+completeness."""
 
 import operator
 from math import floor, log10
@@ -7,7 +8,7 @@ import networkx as nx
 
 
 def get_keywords(kw_list, **kwargs):
-    """Helper method to return keyword arguments for graph module."""
+    """Helper function to return keyword arguments for graph module."""
 
     for key in kwargs:
         assert key in kw_list
@@ -61,7 +62,7 @@ def get_keywords(kw_list, **kwargs):
 
 
 def get_solar_species_list():
-    """Helper method to return list of solar species."""
+    """Helper function to return list of solar species."""
 
     return [
         "h1",
@@ -354,7 +355,7 @@ def get_solar_species_list():
 
 
 def color_edges(my_graph, net, color_tuples):
-    """Helper method to color arcs in graph by reaction type."""
+    """Helper function to color arcs in graph by reaction type."""
     color = {}
     for reaction in net.get_reactions():
         color[reaction] = "black"
@@ -372,18 +373,18 @@ def color_edges(my_graph, net, color_tuples):
 
 
 def fexp(_x):
-    """Helper method to compute an exponent of a number."""
+    """Helper function to compute an exponent of a number."""
     # Add 0.01 for rounding for :.2f mantissa formating
     return int(floor(log10(abs(_x)) + 0.01)) if _x != 0.0 else 0
 
 
 def fman(_x):
-    """Helper method to compute the mantissa of a number."""
+    """Helper function to compute the mantissa of a number."""
     return _x / 10.0 ** fexp(_x)
 
 
 def get_pos(coll, name, state_scaling):
-    """Helper method to define the position of a node in a network graph."""
+    """Helper function to define the position of a node in a network graph."""
     _z, _a, state = coll.xml.get_z_a_state_from_nuclide_name(name)
     _n = _a - _z
     if state == "g":
@@ -394,7 +395,7 @@ def get_pos(coll, name, state_scaling):
 
 
 def get_subset_and_anchors(nuclides):
-    """Helper method to define the scope and anchors of a graph."""
+    """Helper function to define the scope and anchors of a graph."""
     species_subset = []
     my_dict = {}
     z_dict = {}
@@ -424,14 +425,14 @@ def get_subset_and_anchors(nuclides):
 
 
 def apply_graph_attributes(my_graph, graph_attributes):
-    """Helper method to apply attributes to the graph as a whole."""
+    """Helper function to apply attributes to the graph as a whole."""
     if graph_attributes:
         for key, value in graph_attributes.items():
             my_graph.graph[key] = value
 
 
 def apply_node_attributes(my_graph, node_attributes):
-    """Helper method to apply attributes to the nodes of a graph."""
+    """Helper function to apply attributes to the nodes of a graph."""
     if node_attributes:
         for key, value in node_attributes.items():
             for node in my_graph.nodes:
@@ -439,7 +440,7 @@ def apply_node_attributes(my_graph, node_attributes):
 
 
 def apply_edge_attributes(my_graph, edge_attributes):
-    """Helper method to apply attributes to the edges of a graph."""
+    """Helper function to apply attributes to the edges of a graph."""
     if edge_attributes:
         for key, value in edge_attributes.items():
             for edge in my_graph.edges:
@@ -449,7 +450,7 @@ def apply_edge_attributes(my_graph, edge_attributes):
 def apply_solar_node_attributes(
     my_graph, solar_species, solar_node_attributes
 ):
-    """Helper method to apply attributes to the nodes representing solar\
+    """Helper function to apply attributes to the nodes representing solar\
        species in a graph."""
 
     if solar_node_attributes:
@@ -460,7 +461,7 @@ def apply_solar_node_attributes(
 
 
 def apply_special_node_attributes(my_graph, special_node_attributes):
-    """Helper method to apply attributes to special nodes in a graph."""
+    """Helper function to apply attributes to special nodes in a graph."""
     if special_node_attributes:
         for node in special_node_attributes:
             for key, value in special_node_attributes[node].items():
@@ -468,21 +469,21 @@ def apply_special_node_attributes(my_graph, special_node_attributes):
 
 
 def check_special_edges_for_reaction(net, special_edge_attributes):
-    """Helper method to check for reaction in special edges."""
+    """Helper function to check for reaction in special edges."""
     reactions = net.get_reactions()
     for edge in special_edge_attributes:
         assert special_edge_attributes[edge]["reaction"] in reactions
 
 
 def set_edge_attribute(my_graph, edge, reaction, key, value):
-    """Helper method to set attribute in multidigraph by reaction."""
+    """Helper function to set attribute in multidigraph by reaction."""
     for _n in range(my_graph.number_of_edges(*edge)):
         if my_graph.edges[*edge, _n]["reaction"] == reaction:
             my_graph.edges[*edge, _n][key] = value
 
 
 def apply_special_edge_attributes(my_graph, special_edge_attributes):
-    """Helper method to apply attributes to special edges in a graph."""
+    """Helper function to apply attributes to special edges in a graph."""
     if special_edge_attributes:
         for edge in special_edge_attributes:
             assert "reaction" in special_edge_attributes[edge]
@@ -501,7 +502,7 @@ def apply_special_edge_attributes(my_graph, special_edge_attributes):
 
 
 def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
-    """Helper method to create a flow graph."""
+    """Helper function to create a flow graph."""
 
     d_g = nx.MultiDiGraph()
 
@@ -572,7 +573,7 @@ def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
 def create_integrated_current_graph(
     net, zone, subset_nuclides, anchors, **my_args
 ):
-    """Helper method to create an integrated current graph."""
+    """Helper function to create an integrated current graph."""
 
     # Create graph.
 
