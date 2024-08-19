@@ -187,15 +187,13 @@ The possible keyword arguments are:
 
     ``special_edge_attributes`` (:obj:`dict`):  A dictionary of graphviz\
         attributes to be applied to the special edges in the graph.\
-        The dictionary has as keys a :obj:`tuple` *(u, v)*, where *u* is the\
-        source of rhe directed edge and *v* is the target.  The value of\
-        each dictionary is\
+        The dictionary has as keys a :obj:`tuple` *(u, v, reaction)*,\
+        where *u* is the source of rhe directed edge, *v* is the target,\
+        and *reaction* is the reaction from which the arc derives.  The\
+        *reaction* tuple element serves as a key in the multi-digraph to\
+        distinguish parallel arcs..  The value of each dictionary is\
         a dictionary of graphviz properties to be applied to the given special\
-        edge.  The dictionary of properties for a special edge must include\
-        an entry with key being *reaction* and the value being the\
-        string of a valid reaction in the network.  This is to enable\
-        selection of the proper arc in the network multi-digraph.
-
+        edge.
 
 """
 
@@ -655,11 +653,6 @@ def create_network_graph(net, **kwargs):
     )
 
     gh.apply_special_node_attributes(d_g, my_args["special_node_attributes"])
-
-    if my_args["special_edge_attributes"]:
-        gh.check_special_edges_for_reaction(
-            net, my_args["special_edge_attributes"]
-        )
 
     gh.apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 

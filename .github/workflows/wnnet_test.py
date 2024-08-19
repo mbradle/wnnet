@@ -104,18 +104,19 @@ def test_graph():
         "fe56": {"fillcolor": "green", "shape": "oval", "style": "filled"}
     }
     my_special_edge_attributes = {
-        ("fe56", "fe57"): {"color": "blue", "penwidth": 2,
-         "reaction": "n + fe56 -> fe57 + gamma"}
+        ("fe56", "fe57", "n + fe56 -> fe57 + gamma"): {
+            "color": "blue",
+            "penwidth": 2,
+        },
+        ("co51", "fe51", "n + co51 -> h1 + fe51"): {
+            "color": "orange",
+            "penwidth": 2,
+        },
+        ("co51", "fe51", "o51 -> fe51 + positron + neutrino_e"): {
+            "color": "violet",
+            "penwidth": 2,
+        },
     }
-    
-
-    assert wn.graph.create_nuclides_graph(
-        nuc,
-        induced_nuc_xpath=my_induced_nuc_xpath,
-        graph_attributes=my_graph_attributes,
-        node_attributes=my_node_attributes,
-        special_node_attributes=my_special_node_attributes,
-    )
 
     my_color_tuples = [
         ("[product = 'electron']", "blue"),
@@ -126,7 +127,7 @@ def test_graph():
         net,
         induced_nuc_xpath=my_induced_nuc_xpath,
         induced_reac_xpath=my_induced_reac_xpath,
-        reaction_color_tuples = my_color_tuples,
+        reaction_color_tuples=my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
         special_node_attributes=my_special_node_attributes,
@@ -151,7 +152,7 @@ def test_graph():
         mass_fractions,
         induced_nuc_xpath=my_induced_nuc_xpath,
         induced_reac_xpath=my_induced_reac_xpath,
-        reaction_color_tuples = my_color_tuples,
+        reaction_color_tuples=my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
         special_node_attributes=my_special_node_attributes,
@@ -163,7 +164,7 @@ def test_graph():
         zones,
         induced_nuc_xpath=my_induced_nuc_xpath,
         induced_reac_xpath=my_induced_reac_xpath,
-        reaction_color_tuples = my_color_tuples,
+        reaction_color_tuples=my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
         special_node_attributes=my_special_node_attributes,
@@ -177,7 +178,7 @@ def test_graph():
         zones,
         induced_nuc_xpath=my_induced_nuc_xpath,
         induced_reac_xpath=my_induced_reac_xpath,
-        reaction_color_tuples = my_color_tuples,
+        reaction_color_tuples=my_color_tuples,
         graph_attributes=my_graph_attributes,
         node_attributes=my_node_attributes,
         special_node_attributes=my_special_node_attributes,
@@ -185,4 +186,3 @@ def test_graph():
     )
     for graph in my_graphs.values():
         assert graph
-

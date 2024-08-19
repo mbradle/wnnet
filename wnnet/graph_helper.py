@@ -367,9 +367,7 @@ def color_edges(my_graph, net, color_tuples):
 
         for edge in my_graph.edges:
             if not "color" in my_graph.edges[edge]:
-                my_graph.edges[edge]["color"] = color[
-                    my_graph.edges[edge]["reaction"]
-                ]
+                my_graph.edges[edge]["color"] = color[edge[2]]
 
 
 def fexp(_x):
@@ -468,37 +466,14 @@ def apply_special_node_attributes(my_graph, special_node_attributes):
                 my_graph.nodes[node][key] = value
 
 
-def check_special_edges_for_reaction(net, special_edge_attributes):
-    """Helper function to check for reaction in special edges."""
-    reactions = net.get_reactions()
-    for edge in special_edge_attributes:
-        assert special_edge_attributes[edge]["reaction"] in reactions
-
-
-def set_edge_attribute(my_graph, edge, reaction, key, value):
-    """Helper function to set attribute in multidigraph by reaction."""
-    for _n in range(my_graph.number_of_edges(*edge)):
-        if my_graph.edges[*edge, _n]["reaction"] == reaction:
-            my_graph.edges[*edge, _n][key] = value
-
-
 def apply_special_edge_attributes(my_graph, special_edge_attributes):
     """Helper function to apply attributes to special edges in a graph."""
     if special_edge_attributes:
         for edge in special_edge_attributes:
-            assert "reaction" in special_edge_attributes[edge]
-            if not my_graph.has_edge(*edge):
-                my_graph.add_edge(
-                    *edge, reaction=special_edge_attributes[edge]["reaction"]
-                )
+            if not edge in my_graph.edges:
+                my_graph.add_edge(*edge)
             for key, value in special_edge_attributes[edge].items():
-                set_edge_attribute(
-                    my_graph,
-                    edge,
-                    special_edge_attributes[edge]["reaction"],
-                    key,
-                    value,
-                )
+                my_graph.edges[*edge][key] = value
 
 
 def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
@@ -532,11 +507,6 @@ def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):
     f_max = set_widths_and_get_max_weight(d_g, sub_graph, my_args)
 
     # Apply special edge attributes after scaling.
-
-    if my_args["special_edge_attributes"]:
-        check_special_edges_for_reaction(
-            net, my_args["special_edge_attributes"]
-        )
 
     apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 
@@ -608,11 +578,6 @@ def create_integrated_current_graph(
 
     # Apply special edge attributes after scaiing.
 
-    if my_args["special_edge_attributes"]:
-        check_special_edges_for_reaction(
-            net, my_args["special_edge_attributes"]
-        )
-
     apply_special_edge_attributes(d_g, my_args["special_edge_attributes"])
 
     # Remove isolated nodes if desired
@@ -652,14 +617,14 @@ def add_reactions_to_graph(net, d_g, my_args):
         if my_args["direction"] in ("forward", "both"):
             for reactant in value.nuclide_reactants:
                 for product in value.nuclide_products:
-                    d_g.add_edge(reactant, product, reaction=key)
+                    d_g.add_edge(reactant, product, key)
 
         if not net.is_weak_reaction(key) and (
             my_args["direction"] in ("reverse", "both")
         ):
             for product in value.nuclide_products:
                 for reactant in value.nuclide_reactants:
-                    d_g.add_edge(product, reactant, reaction=key)
+                    d_g.add_edge(product, reactant, key)
 
 
 def add_flows_to_graph(net, d_g, my_flows, my_args):
@@ -697,7 +662,7 @@ def add_flows_to_graph(net, d_g, my_flows, my_args):
                 add_flow_edges(
                     d_g,
                     reactions[key].nuclide_reactants,
-                    reactions[key].products,
+                    reactions[key].nuclide_products,
                     net_flow,
                     key,
                 )
@@ -705,7 +670,7 @@ def add_flows_to_graph(net, d_g, my_flows, my_args):
                 add_flow_edges(
                     d_g,
                     reactions[key].nuclide_products,
-                    reactions[key].reactants,
+                    reactions[key].nuclide_reactants,
                     -net_flow,
                     key,
                 )
@@ -729,13 +694,11 @@ def add_currents_to_graph(net, zone, d_g):
         if value > 0:
             for reactant in reactions[key].nuclide_reactants:
                 for product in reactions[key].nuclide_products:
-                    d_g.add_edge(reactant, product, weight=value, reaction=key)
+                    d_g.add_edge(reactant, product, key, weight=value)
         else:
             for product in reactions[key].nuclide_products:
                 for reactant in reactions[key].nuclide_reactants:
-                    d_g.add_edge(
-                        product, reactant, weight=-value, reaction=key
-                    )
+                    d_g.add_edge(product, reactant, key, weight=-value)
 
 
 def remove_isolated_nodes(d_g, my_args):
@@ -775,9 +738,9 @@ def set_widths_and_get_max_weight(d_g, sub_graph, my_args):
     return f_max
 
 
-def add_flow_edges(d_g, s_array, t_array, my_weight, my_key):
+def add_flow_edges(d_g, s_array, t_array, my_weight, key):
     """Helper function to add flow edges."""
 
     for source in s_array:
         for target in t_array:
-            d_g.add_edge(source, target, weight=my_weight, reaction=my_key)
+            d_g.add_edge(source, target, key, weight=my_weight)
