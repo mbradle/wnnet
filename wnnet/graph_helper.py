@@ -473,7 +473,7 @@ def apply_special_edge_attributes(my_graph, special_edge_attributes):
             if not edge in my_graph.edges:
                 my_graph.add_edge(*edge)
             for key, value in special_edge_attributes[edge].items():
-                my_graph.edges[*edge][key] = value
+                my_graph.edges[edge][key] = value
 
 
 def create_flow_graph(net, my_flows, subset_nuclides, anchors, **my_args):

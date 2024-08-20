@@ -7,6 +7,10 @@ project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 Version 2.0.1
 -------------
 
+Fix:
+
+  * An edge key has been fixed.
+
 Internal:
 
   * The Zenodo doi has been updated to resolve to most recent version.
