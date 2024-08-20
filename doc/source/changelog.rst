@@ -12,6 +12,7 @@ New:
   * A number of method and function prototypes have been altered.  These are
     backwards-incompatible changes.
   * Linting and testing have been added.
+  * It is now possible to add special arcs to graphs.
 
 Internal:
 

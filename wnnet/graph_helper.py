@@ -11,7 +11,7 @@ def get_keywords(kw_list, **kwargs):
     """Helper function to return keyword arguments for graph module."""
 
     for key in kwargs:
-        assert key in kw_list
+        assert key in kw_list, f"Keyword {key} not allowed in this routine."
 
     def_kwargs = {}
 

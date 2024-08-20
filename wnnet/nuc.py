@@ -98,8 +98,7 @@ class Nuc:
 
         """
 
-        assert t_9 > 0 and rho > 0
-        assert t_9 > 0 and rho > 0
+        assert t_9 > 0 and rho > 0, "t_9 and rho must be > 0."
 
         nuclide = self.get_nuclides()[name]
 

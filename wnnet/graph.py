@@ -188,10 +188,11 @@ The possible keyword arguments are:
     ``special_edge_attributes`` (:obj:`dict`):  A dictionary of graphviz\
         attributes to be applied to the special edges in the graph.\
         The dictionary has as keys a :obj:`tuple` *(u, v, reaction)*,\
-        where *u* is the source of rhe directed edge, *v* is the target,\
+        where *u* is the source of the directed edge (i.e., arc),\
+        *v* is the target,\
         and *reaction* is the reaction from which the arc derives.  The\
         *reaction* tuple element serves as a key in the multi-digraph to\
-        distinguish parallel arcs..  The value of each dictionary is\
+        distinguish parallel arcs.  The values of the dictionary are each\
         a dictionary of graphviz properties to be applied to the given special\
         edge.
 
