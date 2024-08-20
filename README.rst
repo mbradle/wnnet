@@ -2,7 +2,7 @@ Overview
 ========
 
 .. image:: https://zenodo.org/badge/541709014.svg
-  :target: https://zenodo.org/doi/10.5281/zenodo.13338379
+  :target: https://zenodo.org/doi/10.5281/zenodo.13338378
 
 
 wnnet is a python package for handling
