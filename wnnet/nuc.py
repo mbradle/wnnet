@@ -28,7 +28,8 @@ class Nuc:
 
         Args:
             ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
-             the nuclides.  Default is all species.
+             the nuclides.  Default is all species in the underlying collection
+             of nuclides.
 
         Returns:
             A :obj:`dict` containing `wnutils <https://wnutils.readthedocs.io>`_ nuclides.
@@ -36,9 +37,14 @@ class Nuc:
         """
 
         if nuc_xpath not in self.nuclides:
-            self.nuclides[nuc_xpath] = self.xml.get_nuclide_data(
-                nuc_xpath=nuc_xpath
-            )
+            self.nuclides[nuc_xpath] = {}
+
+            new_nuclides = self.xml.get_nuclide_data(nuc_xpath=nuc_xpath)
+
+            for key, value in new_nuclides.items():
+                if key in self.nuclides[""]:
+                    self.nuclides[nuc_xpath][key] = value
+
         return self.nuclides[nuc_xpath]
 
     def compute_nuclear_partition_function(self, name, t_9):

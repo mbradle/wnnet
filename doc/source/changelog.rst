@@ -4,6 +4,14 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.0.3
+-------------
+
+Fix:
+
+  * The selection of nuclides and reactions has been changed to be more
+    consistent with expected behavior.
+
 Version 2.0.2
 -------------
 

@@ -19,16 +19,15 @@ class Reac:
     def __init__(self, file, reac_xpath=""):
         self.xml = wx.Xml(file)
         self.reactions = {}
-        self.reactions[reac_xpath] = self.xml.get_reaction_data(
-            reac_xpath=reac_xpath
-        )
+        self.reactions[""] = self.xml.get_reaction_data(reac_xpath=reac_xpath)
 
     def get_reactions(self, reac_xpath=""):
         """Method to return a collection of reactions.
 
         Args:
             ``reac_xpath`` (:obj:`str`, optional): An XPath expression\
-             to select the reactions.  Default is all reactions.
+             to select the reactions.  Default is all reactions in the
+             underlying collection of reactions.
 
         Returns:
             A :obj:`dict` containing `wnutils <https://wnutils.readthedocs.io>`_ reactions.
@@ -36,9 +35,14 @@ class Reac:
         """
 
         if reac_xpath not in self.reactions:
-            self.reactions[reac_xpath] = self.xml.get_reaction_data(
-                reac_xpath=reac_xpath
-            )
+            self.reactions[reac_xpath] = {}
+
+            new_reactions = self.xml.get_reaction_data(reac_xpath=reac_xpath)
+
+            for key, value in new_reactions.items():
+                if key in self.reactions[""]:
+                    self.reactions[reac_xpath][key] = value
+
         return self.reactions[reac_xpath]
 
     def _compute_duplicate_factor(self, elements):
