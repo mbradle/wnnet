@@ -1,6 +1,9 @@
 """This module constants for use in the wnnet package.  The module
 also includes all constants from
 `gslconsts <https://gslconsts.readthedocs.io/en/latest/gslconsts.html#module-gslconsts.consts>`_.
+These latter constants are imported into the *gc* namespace, so, for example,
+the speed of light in vacuum in MKSA units would be
+*wnnet.consts.gc.GSL_CONST_MKSA_SPEED_OF_LIGHT*.
 """
 
 import numpy as np

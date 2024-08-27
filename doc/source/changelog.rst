@@ -4,6 +4,14 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.0.4
+-------------
+
+Fix:
+
+  * The importation of gslconsts into the gc namespace has been clarified
+    in the documentation.
+
 Version 2.0.3
 -------------
 
