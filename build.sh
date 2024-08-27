@@ -3,7 +3,7 @@
 rm -fr dist
 cd wnnet
 black --line-length=79 *.py
-pylint --disable=C0103 consts.py
+pylint --disable=C0103,W0611 consts.py
 pylint __about__.py __init__.py flows.py  graph.py graph_helper.py net.py  nuc.py reac.py zones.py
 
 cd ../.github/workflows/

@@ -8,7 +8,7 @@ authors:
   given-names: "Mengke"
   orcid: "https://orcid.org/0000-0002-6373-7494"
 title: "wnnet"
-version: 2.0.4
+version: 2.1.0
 doi: 10.5281/zenodo.13338378
 date-released: 2024-08-28
 url: "https://github.com/mbradle/wnnet"
