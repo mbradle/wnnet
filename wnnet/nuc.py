@@ -28,7 +28,7 @@ class Nuc:
 
         Args:
             ``nuc_xpath`` (:obj:`str`, optional): An XPath expression to select\
-             the nuclides.  Default is all species in the underlying collection
+             the nuclides.  Default is all species in the underlying collection\
              of nuclides.
 
         Returns:

@@ -26,7 +26,7 @@ class Reac:
 
         Args:
             ``reac_xpath`` (:obj:`str`, optional): An XPath expression\
-             to select the reactions.  Default is all reactions in the
+             to select the reactions.  Default is all reactions in the\
              underlying collection of reactions.
 
         Returns:
