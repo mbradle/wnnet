@@ -578,7 +578,7 @@ def create_zone_flow_graphs(net, zones, **kwargs):
 
 def create_network_graph(net, **kwargs):
     """A routine to create a network graph showing species and reactions\
-       among them.
+        among them.
 
     Args:
         ``net``: A wnnet network. 
@@ -593,10 +593,10 @@ def create_network_graph(net, **kwargs):
           `special_edge_attributes`_.
 
     Returns:
-        A `networkx multidigraph \
-        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_ \
-        `showing the network; that is, the nuclides and reactions among them.
-     
+        A `networkx multidigraph\
+        <https://networkx.org/documentation/stable/reference/classes/multidigraph.html>`_\
+        showing the network; that is, the nuclides and reactions among them.
+
     """
 
     my_list = [
