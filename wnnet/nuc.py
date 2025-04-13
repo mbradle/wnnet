@@ -143,7 +143,26 @@ class Nuc:
             - nuclide["mass excess"]
         )
 
-    def _compute_nse_factor(self, name, t_9, rho):
+    def compute_nse_factor(self, name, t_9, rho):
+        """Method to compute the NSE factor for a species.
+
+        Args:
+            ``name`` (:obj:`str`): The name of the species.
+
+            ``t_9`` (:obj:`float`): The temperature in 10\\ :sup:`9` K at\
+             which to compute the NSE factor.
+
+            ``rho`` (:obj:`float`): The density in g/cc  at which to compute\
+            the NSE factor.
+
+        Returns:
+            A :obj:`float` giving the NSE factor for the species\
+            at the input conditions.  This factor is the binding energy\
+            of the species divided by kT plus the logarithm of the\
+            quantum abundance of the species.
+
+        """
+
         return np.log(self.compute_quantum_abundance(name, t_9, rho)) + (
             (self.compute_binding_energy(name) * wc.MeV_to_ergs)
         ) / (wc.k_B * (t_9 * 1.0e9))

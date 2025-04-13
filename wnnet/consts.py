@@ -9,7 +9,6 @@ the Euler-Mascheroni constant would be *wnnet.consts.math.M_EULER*.
 
 import numpy as np
 from gslconsts import consts
-from gslconsts import math
 
 # Conversions for use with the package.
 

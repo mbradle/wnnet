@@ -221,9 +221,9 @@ class Net(wn.Nuc, wr.Reac):
         d_exp = 0
 
         for spec in reaction.nuclide_reactants:
-            d_exp += self._compute_nse_factor(spec, t_9, 1.0)
+            d_exp += self.compute_nse_factor(spec, t_9, 1.0)
         for spec in reaction.nuclide_products:
-            d_exp -= self._compute_nse_factor(spec, t_9, 1.0)
+            d_exp -= self.compute_nse_factor(spec, t_9, 1.0)
 
         if d_exp < -300.0:
             return (forward, 0)

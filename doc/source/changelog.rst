@@ -4,6 +4,14 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.4.0
+-------------
+
+New:
+
+  * The routine to compute the NSE factor for a species has been promoted
+    to the API.
+
 Version 2.3.0
 -------------
 
