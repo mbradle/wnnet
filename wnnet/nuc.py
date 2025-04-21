@@ -106,9 +106,7 @@ class Nuc:
 
         assert t_9 > 0 and rho > 0, "t_9 and rho must be > 0."
 
-        nuclide = self.get_nuclides()[name]
-
-        mass = wc.m_u_in_MeV * nuclide["a"] + nuclide["mass excess"]
+        mass = self.compute_atomic_mass(name)
 
         result = self.compute_nuclear_partition_function(name, t_9) / (
             rho * wc.N_A
@@ -120,6 +118,19 @@ class Nuc:
         result *= np.power((p_1 / p_2), 1.5)
 
         return result
+
+    def compute_atomic_mass(self, name):
+        """Method to compute the atomic mass of a species.
+
+        Args:
+            ``name`` (:obj:`str`): The name of the species.
+
+        Returns:
+            A :obj:`float` containing the atomic mass in MeV.
+
+        """
+        nuclide = self.get_nuclides()[name]
+        return nuclide["mass excess"] + nuclide["a"] * wc.m_u_in_MeV
 
     def compute_binding_energy(self, name):
         """Method to compute the nuclear binding energy of a species.

@@ -26,6 +26,7 @@ def test_nuc():
     assert len(nuc) > 0
     assert net.compute_nuclear_partition_function("ca41", 6.7) > 0
     assert net.compute_quantum_abundance("o16", 0.2, 10) > 0
+    assert net.compute_atomic_mass("fe56") > 0
     assert net.compute_binding_energy("ca40") > 0
 
 

@@ -4,6 +4,14 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.5.0
+-------------
+
+New:
+
+  * A routine to compute the atomic mass for a species has been added
+    to the API.
+
 Version 2.4.0
 -------------
 
