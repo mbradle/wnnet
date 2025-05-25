@@ -231,15 +231,14 @@ def _compute_link_flows_for_valid_reactions(
                         )
                     )
 
-                if flow_data.direction == "both":
-                    for target in reaction.nuclide_reactants:
-                        tup_array.append(
-                            (
-                                source,
-                                target,
-                                -forward * p_source * flow_data.scale,
-                            )
+                for target in reaction.nuclide_reactants:
+                    tup_array.append(
+                        (
+                            source,
+                            target,
+                            -forward * p_source * flow_data.scale,
                         )
+                    )
 
         if not net.is_weak_reaction(
             reaction.get_string()
@@ -266,15 +265,14 @@ def _compute_link_flows_for_valid_reactions(
                         )
                     )
 
-                if flow_data.direction == "both":
-                    for target in reaction.nuclide_products:
-                        tup_array.append(
-                            (
-                                source,
-                                target,
-                                -reverse * p_source * flow_data.scale,
-                            )
+                for target in reaction.nuclide_products:
+                    tup_array.append(
+                        (
+                            source,
+                            target,
+                            -reverse * p_source * flow_data.scale,
                         )
+                    )
 
         if flow_data.order != "normal":
             tup_array = _swap_tuple_array(tup_array)

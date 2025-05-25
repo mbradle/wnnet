@@ -4,6 +4,18 @@ Changelog
 All notable changes to this project will be documented in this file.  This
 project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.6.0
+-------------
+
+New:
+
+  * Link flows now include links between reactants for the "forward" direction
+    and between products for the "reverse" direction.
+
+Fix:
+
+  * A tutorial typo has been fixed.
+
 Version 2.5.0
 -------------
 
