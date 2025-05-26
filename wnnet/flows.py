@@ -57,7 +57,7 @@ def _compute_flows_for_valid_reactions(
 
 
 def compute_flows(net, t_9, rho, mass_fractions, **kwargs):
-    """A routine to compute flows for a given set of mass fractions at the
+    """A routine to compute flows for a given set of mass fractions at the\
        input temperature and density.
 
     Args:
@@ -283,7 +283,7 @@ def _compute_link_flows_for_valid_reactions(
 
 
 def compute_link_flows(net, t_9, rho, mass_fractions, **kwargs):
-    """A routine to compute link flows for a given set of mass fractions
+    """A routine to compute link flows for a given set of mass fractions\
        at the input temperature and density.
 
     Args:
@@ -313,9 +313,9 @@ def compute_link_flows(net, t_9, rho, mass_fractions, **kwargs):
               is a `wnutils <https://wnutils.readthedocs.io>`_ reaction\
               instance.  Other data can be bound to the function.
            *  **direction** (:obj:`str`):  A string indicating the\
-              direction of the links ("forward", from reactants to products;\
-              "reverse", from products to reactants; "both", both "forward"\
-              and "reverse").  Default is "both".
+              direction of the links ("forward", from reactants to reactants\
+              and products; "reverse", from products to reactants and products;\
+              "both", both "forward" and "reverse").  Default is "both".
            *  **order** (:obj:`str`):  A string indicating the order\
               of the links.  Default is *normal*, in which the *source* and\
               *target* of the link are in the time-forward direction of the\
@@ -329,7 +329,8 @@ def compute_link_flows(net, t_9, rho, mass_fractions, **kwargs):
         item in the dictionary an array of three-element :obj:`tuple` objects.
         The tuple elements are the *source*, *target*, and *link flow*.
         The *source* and *target* are determined from the time-forward
-        direction of the reaction.
+        direction of the reaction or the reverse, as indicated by the *order*
+        argument.
 
     """
 
@@ -400,9 +401,9 @@ def compute_link_flows_for_zones(net, zones, **kwargs):
               `wnutils <https://wnutils.readthedocs.io>`_ reaction and\
               zone instances.  Other data can be bound to the function.
            *  **direction** (:obj:`str`):  A string indicating the\
-              direction of the links ("forward", from reactants to products;\
-              "reverse", from products to reactants; "both", both "forward"\
-              and "reverse").  Default is "both".
+              direction of the links ("forward", from reactants to reactants\
+              and products; "reverse", from products to reactants and products;\
+              "both", both "forward" and "reverse").  Default is "both".
            *  **order** (:obj:`str`):  A string indicating the order\
               of the links.  Default is *normal*, in which the *source* and\
               *target* of the link are in the time-forward direction of the\
@@ -418,9 +419,9 @@ def compute_link_flows_for_zones(net, zones, **kwargs):
         A :obj:`dict` of flow links for each zone.  The data for
         each zone are themselves a :obj:`dict` of reactions with each
         item in the dictionary an array of three-element :obj:`tuple` objects.
-        The tuple elements are the *source*, *target*, and *link flow*.
         The *source* and *target* are determined from the time-forward
-        direction of the reaction.
+        direction of the reaction or the reverse, as indicated by the *order*
+        argument.
 
     """
 

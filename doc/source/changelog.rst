@@ -14,7 +14,7 @@ New:
 
 Fix:
 
-  * A tutorial typo has been fixed.
+  * Some tutorial typos have been fixed.
 
 Version 2.5.0
 -------------
