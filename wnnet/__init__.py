@@ -8,4 +8,5 @@ import wnnet.reac
 import wnnet.net
 import wnnet.graph
 import wnnet.flows
+import wnnet.thermo
 import wnnet.zones
