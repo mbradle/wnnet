@@ -1,40 +1,43 @@
 """This module computes thermodynamic quantities for a network."""
 
 import numpy as np
-import wnnet.consts as wc
 import wnstatmech as ws
+import wnnet.consts as wc
 
 
 def _compute_baryon_quantity(nuc, quantity, t_9, rho, mass_fractions):
 
     result = 0
 
-    k_T = wc.k_B * 1.0e9 * t_9
+    kt = wc.k_B * 1.0e9 * t_9
 
     for key, value in mass_fractions.items():
         y = value / key[2]
 
-        n_den = rho * wc.N_A * y
+        if y > 1.e100:
 
-        if quantity == "pressure":
-            result += n_den * k_T
-        elif quantity == "energy density":
-            result += n_den * (
-                nuc.compute_atomic_mass(key[0]) * wc.MeV_to_ergs + 1.5 * k_T
-            )
-        elif quantity == "internal energy density":
-            result += n_den * 1.5 * k_T
-        elif quantity == "entropy density":
-            result += (
-                n_den
-                * wc.k_B
-                * (
-                    5.0 / 2.0
-                    - np.log(
-                        y / nuc.compute_quantum_abundance(key[0], t_9, rho)
+            n_den = rho * wc.N_A * y
+
+            if quantity == "pressure":
+                result += n_den * kt
+            elif quantity == "energy density":
+                result += n_den * (
+                    nuc.compute_atomic_mass(key[0]) * wc.MeV_to_ergs
+                    + 1.5 * kt
+                )
+            elif quantity == "internal energy density":
+                result += n_den * 1.5 * kt
+            elif quantity == "entropy density":
+                result += (
+                    n_den
+                    * wc.k_B
+                    * (
+                        5.0 / 2.0
+                        - np.log(
+                            y / nuc.compute_quantum_abundance(key[0], t_9, rho)
+                        )
                     )
                 )
-            )
 
     return result
 
@@ -115,6 +118,32 @@ def compute_thermo_quantity(nuc, quantity, t_9, rho, mass_fractions):
     return result
 
 
+def compute_thermo_quantity_in_zone(nuc, quantity, zone):
+    """A routine to compute a thermodynamic quantity for the input zone.
+
+    Args:
+        ``nuc``: A wnnet nuclide collection.
+
+        ``quantity`` (:obj:`str`):  The thermodynamic quantity to compute.
+
+        ``zone`` (:obj:`dict`): A `wnutils <https://wnutils.readthedocs.io>`_ *zone*.
+
+    Returns:
+        A :obj:`dict` keys *electron*, *photon*, *baryon*,
+        and *total* and the values being the computed quantity for
+        the zone.
+
+    """
+
+    return compute_thermo_quantity(
+        nuc,
+        quantity,
+        float(zone["properties"]["t9"]),
+        float(zone["properties"]["rho"]),
+        zone["mass fractions"],
+    )
+
+
 def compute_thermo_quantity_for_zones(nuc, quantity, zones):
     """A routine to compute a thermodynamic quantity for the input zone.
 
@@ -137,15 +166,10 @@ def compute_thermo_quantity_for_zones(nuc, quantity, zones):
     result = {}
 
     for key, value in zones.items():
-        props = value["properties"]
-        mass_fractions = value["mass fractions"]
-
-        result[key] = compute_thermo_quantity(
+        result[key] = compute_thermo_quantity_in_zone(
             nuc,
             quantity,
-            float(props["t9"]),
-            float(props["rho"]),
-            mass_fractions,
+            value,
         )
 
     return result
