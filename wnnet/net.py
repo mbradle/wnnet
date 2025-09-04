@@ -215,7 +215,7 @@ class Net(wn.Nuc, wr.Reac):
         reaction = self.get_reactions()[name]
         forward = reaction.compute_rate(t_9, user_funcs=user_funcs)
 
-        if self.is_weak_reaction(name):
+        if self.is_weak_reaction(name) or len(reaction.reactants) == 1:
             return (forward, 0)
 
         d_exp = 0
