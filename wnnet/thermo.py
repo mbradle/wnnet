@@ -9,7 +9,7 @@ class Nuclei:
     """A class for computing thermodynamic quantities for nuclei.
 
     Args:
-        ``nuc``: A wnnet nuclide collection.
+        ``nuc`` (:obj:`wnnet.nuc.Nuc`) A wnnet nuclide collection.
 
 
     """
@@ -176,7 +176,7 @@ class Nuclei:
         n_den = self.default_number_density(t9, rho, mass_fractions)
         return 1.5 * wc.k_B * 1.0e9 * t9 * n_den
 
-    def compute_thermo_quantity(self, quantity, t9, rho, mass_fractions):
+    def compute_quantity(self, quantity, t9, rho, mass_fractions):
         """Routine to compute the thermodynamic quantity for the nuclei.
 
         Args:
@@ -200,7 +200,7 @@ class Nuclei:
 
         return self.functions[quantity](t9, rho, mass_fractions)
 
-    def update_thermo_function(self, quantity, function):
+    def update_function(self, quantity, function):
         """Routine to update or add a thermodynamic function for the nuclei.
 
         Args:
@@ -221,7 +221,7 @@ class Thermo:
     """A class for computing network thermodynamic quantities.
 
     Args:
-        ``nuc``: A wnnet nuclide collection.
+        ``nuc`` (:obj:`wnnet.nuc.Nuc`): A wnnet nuclide collection.
 
 
     """
@@ -234,6 +234,88 @@ class Thermo:
         self.bosons["photon"] = ws.boson.create_photon()
         self.nuclei = Nuclei(nuc)
         self.number_density = {}
+
+    def add_boson(self, name, boson):
+        """Routine to add a boson.  If the boson already exists,
+        it will be updated with the new boson.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the boson.
+
+            ``boson`` (:obj:`boson.Boson`): The boson to add.
+
+        Returns:
+            On successful return, the boson has been added or updated.
+
+        """
+        self.bosons[name] = boson
+
+    def get_boson(self, name):
+        """Routine to retrieve a boson.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the boson.
+
+        Returns:
+            The :obj:`wnnet.boson.Boson`.
+
+        """
+        assert name in self.bosons
+        return self.bosons[name]
+
+    def remove_boson(self, name):
+        """Routine to remove a boson.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the boson.
+
+        Returns:
+            On successful return, the boson has been removed.
+
+        """
+        assert name in self.bosons
+        self.bosons.pop(name)
+
+    def add_fermion(self, name, fermion):
+        """Routine to add or update a fermion.  If the fermion already
+        exists, it will be updated.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the fermion.
+
+            ``fermion`` (:obj:`fermion.Fermion`): The fermion to add.
+
+        Returns:
+            On successful return, the fermion has been added or updated.
+
+        """
+        self.fermions[name] = fermion
+
+    def get_fermion(self, name):
+        """Routine to retrieve a fermion.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the fermion.
+
+        Returns:
+            The :obj:`wnnet.fermion.Fermion`.
+
+        """
+        assert name in self.fermions
+        return self.fermions[name]
+
+    def remove_fermion(self, name):
+        """Routine to remove a fermion.
+
+        Args:
+            ``name`` (:obj:`str`):  The name of the fermion.
+
+        Returns:
+            On successful return, the fermion has been removed.
+
+        """
+        assert name in self.fermions
+        self.fermions.pop(name)
 
     def set_number_density(self, particle, number_density):
         """Routine to update the number density for a particle.
@@ -262,7 +344,7 @@ class Thermo:
         """
         return self.number_density[particle]
 
-    def compute_thermo_quantity(self, quantity, t9, rho, mass_fractions):
+    def compute_quantity(self, quantity, t9, rho, mass_fractions):
         """A routine to compute a thermodynamic quantity for a given set of\
         mass fractions at the input temperature and density.
 
@@ -292,7 +374,7 @@ class Thermo:
 
         # Baryons
 
-        result["baryon"] = self.nuclei.compute_thermo_quantity(
+        result["baryon"] = self.nuclei.compute_quantity(
             quantity, t9, rho, mass_fractions
         )
 
@@ -334,7 +416,7 @@ class Thermo:
 
         return result
 
-    def compute_thermo_quantity_in_zone(self, quantity, zone):
+    def compute_quantity_in_zone(self, quantity, zone):
         """A routine to compute a thermodynamic quantity for the input zone.
 
         Args:
@@ -349,14 +431,14 @@ class Thermo:
 
         """
 
-        return self.compute_thermo_quantity(
+        return self.compute_quantity(
             quantity,
             float(zone["properties"]["t9"]),
             float(zone["properties"]["rho"]),
             zone["mass fractions"],
         )
 
-    def compute_thermo_quantity_for_zones(self, quantity, zones):
+    def compute_quantity_for_zones(self, quantity, zones):
         """A routine to compute a thermodynamic quantity for the input zones.
 
         Args:
@@ -376,7 +458,7 @@ class Thermo:
         result = {}
 
         for key, value in zones.items():
-            result[key] = self.compute_thermo_quantity_in_zone(
+            result[key] = self.compute_quantity_in_zone(
                 quantity,
                 value,
             )
