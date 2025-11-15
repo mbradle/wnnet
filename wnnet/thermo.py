@@ -22,7 +22,7 @@ class Nuclei:
         self.functions["pressure"] = self.default_pressure
         self.functions["entropy density"] = self.default_entropy_density
         self.functions["energy density"] = self.default_energy_density
-        self.functions["internal self.energy density"] = (
+        self.functions["internal energy density"] = (
             self.default_internal_energy_density
         )
 
@@ -154,6 +154,8 @@ class Nuclei:
                 )
             )
 
+        return result
+
     def default_internal_energy_density(self, t9, rho, mass_fractions):
         """The default routine for computing the energy density of nuclei,
         which does not include the rest-mass energy.
@@ -200,6 +202,48 @@ class Nuclei:
 
         return self.functions[quantity](t9, rho, mass_fractions)
 
+    def compute_chemical_potentials(
+        self, t9, rho, mass_fractions, include_rest_mass=False
+    ):
+        """Routine to compute the chemical potentials of the nuclei
+        in units of kT.
+
+        Args:
+            ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
+            to compute the chemical potentials.
+
+            ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
+            chemical potentials.
+
+            ``mass_fractions`` (:obj:`float`):\
+                A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
+                fractions.
+
+            ``include_rest_mass`` (:obj:`bool`):\
+                A boolean to choose whether to include the rest mass in the
+                chemical potential.
+
+        Returns:
+            A :obj:`dict` with the name of each species as the key and the
+            chemical potential (divide by kT) as the value.
+
+        """
+        y = self._compute_abundances(mass_fractions)
+
+        result = {}
+        for key, value in y.items():
+            result[key] = np.log(
+                value / self.nuc.compute_quantum_abundance(key, t9, rho)
+            )
+            if include_rest_mass:
+                result[key] += (
+                    self.nuc.compute_atomic_mass(key)
+                    * wc.MeV_to_ergs
+                    / (wc.k_B * 1.0e9 * t9)
+                )
+
+        return result
+
     def update_function(self, quantity, function):
         """Routine to update or add a thermodynamic function for the nuclei.
 
@@ -235,9 +279,9 @@ class Thermo:
         self.nuclei = Nuclei(nuc)
         self.number_density = {}
 
-    def add_boson(self, name, boson):
-        """Routine to add a boson.  If the boson already exists,
-        it will be updated with the new boson.
+    def update_boson(self, name, boson):
+        """Routine to update a boson.  If the boson does not already exist,
+        it will be added.
 
         Args:
             ``name`` (:obj:`str`):  The name of the boson.
@@ -276,9 +320,9 @@ class Thermo:
         assert name in self.bosons
         self.bosons.pop(name)
 
-    def add_fermion(self, name, fermion):
-        """Routine to add or update a fermion.  If the fermion already
-        exists, it will be updated.
+    def update_fermion(self, name, fermion):
+        """Routine to update a fermion.  If the fermion does not already
+        exists, it will be added.
 
         Args:
             ``name`` (:obj:`str`):  The name of the fermion.
