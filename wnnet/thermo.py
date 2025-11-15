@@ -286,7 +286,7 @@ class Thermo:
         Args:
             ``name`` (:obj:`str`):  The name of the boson.
 
-            ``boson`` (:obj:`boson.Boson`): The boson to add.
+            ``boson``: The wnstatmech `boson <https://wnstatmech.readthedocs.io/en/latest/wnstatmech.html#wnstatmech.boson.Boson>`_ to add.
 
         Returns:
             On successful return, the boson has been added or updated.
@@ -301,7 +301,7 @@ class Thermo:
             ``name`` (:obj:`str`):  The name of the boson.
 
         Returns:
-            The :obj:`wnnet.boson.Boson`.
+            The `boson <https://wnstatmech.readthedocs.io/en/latest/wnstatmech.html#wnstatmech.boson.Boson>`_.
 
         """
         assert name in self.bosons
@@ -327,7 +327,7 @@ class Thermo:
         Args:
             ``name`` (:obj:`str`):  The name of the fermion.
 
-            ``fermion`` (:obj:`fermion.Fermion`): The fermion to add.
+            ``fermion``: The wnstatmech `fermion <https://wnstatmech.readthedocs.io/en/latest/wnstatmech.html#wnstatmech.fermion.Fermion>`_  to add.
 
         Returns:
             On successful return, the fermion has been added or updated.
@@ -342,7 +342,7 @@ class Thermo:
             ``name`` (:obj:`str`):  The name of the fermion.
 
         Returns:
-            The :obj:`wnnet.fermion.Fermion`.
+            The `fermion <https://wnstatmech.readthedocs.io/en/latest/wnstatmech.html#wnstatmech.fermion.Fermion>`_.
 
         """
         assert name in self.fermions

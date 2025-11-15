@@ -1,5 +1,6 @@
 lxml
 wnutils
+wnstatmech
 networkx
 gslconsts
 scipy
