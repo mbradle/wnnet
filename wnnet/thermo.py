@@ -306,7 +306,7 @@ class Thermo:
             ``name`` (:obj:`str`):  The name of the boson.
 
             ``boson``: The `wnstatmech <https://wnstatmech.readthedocs.io>`__
-            boson to add.
+            boson to update.
 
         Returns:
             On successful return, the boson has been added or updated.
@@ -348,7 +348,7 @@ class Thermo:
             ``name`` (:obj:`str`):  The name of the fermion.
 
             ``fermion``: The `wnstatmech <https://wnstatmech.readthedocs.io/>`__
-            fermion to add.
+            fermion to update.
 
         Returns:
             On successful return, the fermion has been added or updated.
