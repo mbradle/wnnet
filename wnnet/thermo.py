@@ -6,17 +6,23 @@ import wnnet.consts as wc
 
 
 class Nuclei:
-    """A class for computing thermodynamic quantities for nuclei.
+    """A class for computing thermodynamic quantities for a collection of
+    nuclei.
 
     Args:
-        ``nuc`` (:obj:`wnnet.nuc.Nuc`) A wnnet nuclide collection.
+        ``nuc`` (:obj:`wnnet.nuc.Nuc`): A wnnet nuclide collection.
 
+        ``y_cutoff`` (:obj:`float`, optional): The smallest abundance
+        per nucleon to be used in thermodynamic quantity calculations.
 
     """
 
-    def __init__(self, nuc):
+    def __init__(self, nuc, y_cutoff=1.0e-25):
         self.nuc = nuc
         self.functions = {}
+
+        assert y_cutoff >= 0
+        self.y_cut = y_cutoff
 
         self.functions["number density"] = self.default_number_density
         self.functions["pressure"] = self.default_pressure
@@ -29,7 +35,9 @@ class Nuclei:
     def _compute_abundances(self, mass_fractions):
         y = {}
         for key, value in mass_fractions.items():
-            y[key[0]] = value / key[2]
+            y_c = value / key[2]
+            if y_c > self.y_cut:
+                y[key[0]] = y_c
         return y
 
     def default_number_density(self, t9, rho, mass_fractions):
@@ -37,10 +45,10 @@ class Nuclei:
 
         Args:
             ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
-            to compute the quantity.
+            to compute the number density.
 
             ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
-            quantity.
+            number density.
 
             ``mass_fractions`` (:obj:`float`):\
                 A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
@@ -64,10 +72,10 @@ class Nuclei:
 
         Args:
             ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
-            to compute the quantity.
+            to compute the pressure.
 
             ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
-            quantity.
+            pressure.
 
             ``mass_fractions`` (:obj:`float`):\
                 A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
@@ -77,18 +85,22 @@ class Nuclei:
             A :obj:`float` giving the pressure in cgs units.
 
         """
-        n_den = self.default_number_density(t9, rho, mass_fractions)
-        return wc.k_B * 1.0e9 * t9 * n_den
+        return (
+            wc.k_B
+            * 1.0e9
+            * t9
+            * self.default_number_density(t9, rho, mass_fractions)
+        )
 
     def default_entropy_density(self, t9, rho, mass_fractions):
         """The default routine for computing the entropy density of nuclei.
 
         Args:
             ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
-            to compute the quantity.
+            to compute the entropy density.
 
             ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
-            quantity.
+            entropy density.
 
             ``mass_fractions`` (:obj:`float`):\
                 A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
@@ -124,10 +136,10 @@ class Nuclei:
 
         Args:
             ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
-            to compute the quantity.
+            to compute the energy density (including the rest mass).
 
             ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
-            quantity.
+            energy density (including the rest mass).
 
             ``mass_fractions`` (:obj:`float`):\
                 A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
@@ -162,10 +174,10 @@ class Nuclei:
 
         Args:
             ``t9`` (:obj:`float`):  The temperature in 10\\ :sup:`9` K at which\
-            to compute the quantity.
+            to compute the internal energy density.
 
             ``rho`` (:obj:`float`):  The density in g/cc at which to compute the\
-            quantity.
+            internal energy density.
 
             ``mass_fractions`` (:obj:`float`):\
                 A `wnutils <https://wnutils.readthedocs.io>`_ dictionary of mass\
@@ -175,8 +187,13 @@ class Nuclei:
             A :obj:`float` giving the internal energy density in cgs units.
 
         """
-        n_den = self.default_number_density(t9, rho, mass_fractions)
-        return 1.5 * wc.k_B * 1.0e9 * t9 * n_den
+        return (
+            1.5
+            * wc.k_B
+            * 1.0e9
+            * t9
+            * self.default_number_density(t9, rho, mass_fractions)
+        )
 
     def compute_quantity(self, quantity, t9, rho, mass_fractions):
         """Routine to compute the thermodynamic quantity for the nuclei.
@@ -255,7 +272,7 @@ class Nuclei:
 
         Returns:
             On successful return, the function for the quantity has been
-            updated.
+            updated or added.
 
         """
         self.functions[quantity] = function
