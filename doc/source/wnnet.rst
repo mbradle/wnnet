@@ -62,6 +62,14 @@ wnnet.reac module
    :undoc-members:
    :show-inheritance:
 
+wnnet.thermo module
+-------------------
+
+.. automodule:: wnnet.thermo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 wnnet.zones module
 ------------------
 

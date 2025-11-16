@@ -187,3 +187,31 @@ def test_graph():
     )
     for graph in my_graphs.values():
         assert graph
+
+def test_thermo():
+    nuc = get_nuc()
+    zones = get_zones().get_zones()
+
+    nuc_thermo = wn.thermo.Nuclei(nuc)
+
+    t9 = float(zones["10"]["properties"]["t9"])
+    rho = float(zones["10"]["properties"]["rho"])
+    mass_fractions = zones["10"]["mass fractions"]
+
+    for quantity in nuc_thermo.functions:
+        value = nuc_thermo.compute_quantity(
+                    quantity, t9, rho, mass_fractions
+                )
+        assert value > 0
+
+    mus = nuc_thermo.compute_chemical_potentials(t9, rho, mass_fractions)
+
+    for value in mus.values():
+        assert value
+
+    thermo = wn.thermo.Thermo(nuc)
+
+    for quantity in nuc_thermo.functions:
+        vs = thermo.compute_quantity_for_zones(quantity, zones)
+        assert vs
+
