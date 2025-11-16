@@ -1,4 +1,5 @@
-"""This module computes thermodynamic quantities for a network."""
+"""This module computes thermodynamic quantities for data in a nuclear
+network."""
 
 import numpy as np
 import wnstatmech as ws
@@ -279,7 +280,8 @@ class Nuclei:
 
 
 class Thermo:
-    """A class for computing network thermodynamic quantities.
+    """A class for computing thermodynamic quantities for data in a
+    nuclear reaction network.
 
     Args:
         ``nuc`` (:obj:`wnnet.nuc.Nuc`): A wnnet nuclide collection.
@@ -379,10 +381,12 @@ class Thermo:
         self.fermions.pop(name)
 
     def set_number_density(self, particle, number_density):
-        """Routine to update the number density for a particle.
+        """Routine to update the number density for a particle.  Use this
+        routine to set the number density of particles other than photons,
+        electrons, and nuclei.
 
         Args:
-            ``quantity`` (:obj:`str`):  The thermodynamic quantity.
+            ``particle`` (:obj:`str`):  The name of the particle.
 
             ``number_density`` (:obj:`float`): The number density in
             cgs units.
@@ -395,12 +399,16 @@ class Thermo:
 
     def get_number_density(self, particle):
         """Routine to retrieve the number density for a particle.
+        Use this routine for particles other than the default
+        particles (photons, electrons, and nuclei).  For the default
+        particles, compute the number density directly
+        from the *compute_quantity* method.
 
         Args:
             ``particle`` (:obj:`str`):  The name of the particle.
 
         Returns:
-            On successful return, the number density has been updated.
+            The number density of the particle in cgs units.
 
         """
         return self.number_density[particle]
