@@ -191,7 +191,7 @@ def compute_flows_for_zones(
 def _swap_tuple_array(tup_array):
     new_array = []
     for tup in tup_array:
-        new_array.append((tup[1], tup[0], tup[0]))
+        new_array.append((tup[1], tup[0], tup[2]))
     return new_array
 
 
@@ -274,7 +274,7 @@ def _compute_link_flows_for_valid_reactions(
                         )
                     )
 
-        if flow_data.order != "normal":
+        if flow_data.order == "reversed":
             tup_array = _swap_tuple_array(tup_array)
 
         link_flows[reaction.get_string()] = tup_array
@@ -442,7 +442,7 @@ def compute_link_flows_for_zones(net, zones, **kwargs):
     my_args = get_args(**kwargs)
 
     assert my_args["direction"] in ("forward", "reverse", "both")
-    assert my_args["order"] in ("normal", "reverse")
+    assert my_args["order"] in ("normal", "reversed")
 
     valid_reactions = net.get_valid_reactions(
         nuc_xpath=my_args["nuc_xpath"], reac_xpath=my_args["reac_xpath"]
