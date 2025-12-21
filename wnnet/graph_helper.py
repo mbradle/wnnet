@@ -554,7 +554,7 @@ def create_integrated_current_graph(
     for nuc in net.get_nuclides():
         d_g.add_node(nuc)
 
-    add_currents_to_graph(net, zone, d_g)
+    add_currents_to_graph(net, zone, d_g, my_args)
 
     # Apply attributes
 
@@ -676,10 +676,10 @@ def add_flows_to_graph(net, d_g, my_flows, my_args):
                 )
 
 
-def add_currents_to_graph(net, zone, d_g):
+def add_currents_to_graph(net, zone, d_g, my_args):
     """Helper function to add current arcs to graph."""
 
-    reactions = net.get_reactions()
+    reactions = net.get_reactions(reac_xpath=my_args["induced_reac_xpath"])
 
     props = zone["properties"]
 
@@ -687,7 +687,7 @@ def add_currents_to_graph(net, zone, d_g):
 
     for prop in props:
         if isinstance(prop, tuple):
-            if prop[0] == "flow current":
+            if prop[0] == "flow current" and prop[1] in reactions:
                 f_currents[prop[1]] = float(props[prop])
 
     for key, value in f_currents.items():
